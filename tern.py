@@ -1,4 +1,4 @@
-# Sublime Text 2 plugin for Tern
+# Sublime Text plugin for Tern
 
 import sublime, sublime_plugin
 import os, sys, platform, subprocess, webbrowser, json, re, time
@@ -412,7 +412,20 @@ def plugin_loaded():
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", True)
   plugin_dir = os.path.abspath(os.path.dirname(__file__))
-  tern_command = settings.get("tern_command", None) or ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
+  tern_command = settings.get("tern_command", None)
+  if tern_command is None:
+    if not os.path.isdir(os.path.join(plugin_dir, "node_modules/tern")):
+      if sublime.ok_cancel_dialog(
+          "It appears Tern has not been installed. Do you want tern_for_sublime to try and install it? "
+          "(Note that this will only work if you already have node.js and npm installed on your system.)"
+          "\n\nTo get rid of this dialog, either uninstall tern_for_sublime, or set the tern_command setting.",
+          "Yes, install."):
+        try:
+          subprocess.check_call(["npm", "install"], cwd=plugin_dir)
+        except:
+          sublime.error_message("Installation failed. Try doing 'npm install' manually in " + plugin_dir)
+          return
+    tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
 
 if is_st2:
   plugin_loaded()
