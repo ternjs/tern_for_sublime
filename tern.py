@@ -5,14 +5,14 @@ import os, sys, platform, subprocess, webbrowser, json, re, time
 
 windows = platform.system() == "Windows"
 python3 = sys.version_info[0] > 2
-settings = sublime.load_settings("Preferences.sublime-settings")
+is_st2 = int(sublime.version()) < 3000
 
 def is_js_file(view):
   return view.score_selector(0, "source.js") > 0
 
 files = {}
-
-arghints_enabled = settings.get("tern_argument_hints", True)
+arghints_enabled = False
+tern_command = None
 
 class Listeners(sublime_plugin.EventListener):
   def on_close(self, view):
@@ -122,10 +122,8 @@ def server_port(project, ignored=None):
     project.port = started
   return (started, False)
 
-plugin_dir = os.path.abspath(os.path.dirname(__file__))
-tern_command = settings.get("tern_command", None) or ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
-
 def start_server(project):
+  if not tern_command: return None
   proc = subprocess.Popen(tern_command, cwd=project.dir,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=windows)
   output = ""
@@ -184,12 +182,12 @@ def make_request_py2(port, doc, silent):
     return None
 
 def make_request_py3(port, doc, silent):
-  import urllib
+  import urllib.request, urllib.error
   try:
-    req = urllib.request.urlopen("http://localhost:" + str(port) + "/", json.dumps(doc), 1)
-    return json.loads(req.read())
+    req = urllib.request.urlopen("http://localhost:" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
+    return json.loads(req.read().decode("utf-8"))
   except urllib.error.URLError as error:
-    if not silent: sublime.error_message(error.read())
+    if not silent: sublime.error_message(error.read().decode("utf-8"))
     return None
 
 def run_command(view, query, pos=None, fragments=True, silent=False):
@@ -408,3 +406,13 @@ class TernSelectVariable(sublime_plugin.TextCommand):
         regions.append(sublime.Region(ref["start"], ref["end"]))
     self.view.sel().clear()
     for r in regions: self.view.sel().add(r)
+
+def plugin_loaded():
+  global arghints_enabled, tern_command
+  settings = sublime.load_settings("Preferences.sublime-settings")
+  arghints_enabled = settings.get("tern_argument_hints", True)
+  plugin_dir = os.path.abspath(os.path.dirname(__file__))
+  tern_command = settings.get("tern_command", None) or ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
+
+if is_st2:
+  plugin_loaded()
