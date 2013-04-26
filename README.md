@@ -56,3 +56,12 @@ Whether to show argument hints.
 `tern_command` (list of strings)  
 The command to execute to start a Tern server. The default is
 `["node" "/path/to/Packages/tern_for_sublime/node_modules/tern/bin/tern"]`.
+
+## Alternative package
+
+There exists also [Sublime Tern][stern], a package with similar goals
+(Tern integration for ST). It exposes a slightly different set of
+functionality, and uses the PyV8 bridge, rather than node.js, to run
+the Tern server.
+
+[stern]: https://github.com/emmetio/sublime-tern
