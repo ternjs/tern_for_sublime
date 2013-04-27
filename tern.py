@@ -124,7 +124,11 @@ def server_port(project, ignored=None):
 
 def start_server(project):
   if not tern_command: return None
-  proc = subprocess.Popen(tern_command, cwd=project.dir,
+  env = None
+  if platform.system() == "Darwin":
+    env = os.environ.copy()
+    env["PATH"] += ":/usr/local/bin"
+  proc = subprocess.Popen(tern_command, cwd=project.dir, env=env,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=windows)
   output = ""
 
