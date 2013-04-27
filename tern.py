@@ -34,7 +34,7 @@ class Listeners(sublime_plugin.EventListener):
 
   def on_query_completions(self, view, prefix, _locations):
     pfile = get_pfile(view)
-    if pfile is None: return (None, False)
+    if pfile is None: return None
 
     completions, fresh = ensure_completions_cached(pfile, view)
     if completions is None: return None
