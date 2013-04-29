@@ -53,9 +53,17 @@ and recognized the following settings:
 `tern_argument_hints` (boolean, defaults to true)  
 Whether to show argument hints.
 
-`tern_command` (list of strings)  
-The command to execute to start a Tern server. The default is
+`tern_command` (list of strings) The command to execute to start a
+Tern server. The default is
 `["node" "/path/to/Packages/tern_for_sublime/node_modules/tern/bin/tern"]`.
+If your node installation lives somewhere that's not in the default
+path, or your Tern checkout is not where the module expects it to be,
+you'll want to manually set this option.
+
+Tern uses `.tern-project` files to configure loading libraries and
+plugins for a project. See the [Tern docs][docs] for details.
+
+[docs]: http://ternjs.net/doc/manual.html#configuration
 
 ## Alternative package
 
