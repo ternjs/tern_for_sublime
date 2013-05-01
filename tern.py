@@ -72,7 +72,7 @@ def get_pfile(view):
   project = None
   for f in files.values():
     if f.project.dir == pdir:
-      project = p
+      project = f.project
       break
   pfile = files[fname] = ProjectFile(fname, view, project or Project(pdir))
   return pfile
