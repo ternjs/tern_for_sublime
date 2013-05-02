@@ -148,7 +148,14 @@ def relative_file(pfile):
   return pfile.name[len(pfile.project.dir) + 1:]
 
 def buffer_fragment(view, pos):
-  cur = start = view.line(max(0, pos - 1000)).a
+  region = None
+  for js_region in view.find_by_selector("source.js"):
+    if js_region.a <= pos and js_region.b >= pos:
+      region = js_region
+      break
+  if region is None: return sublime.Region(pos, pos)
+  
+  cur = start = view.line(max(region.a, pos - 1000)).a
   min_indent = 10000
   while True:
     next = view.find("\\bfunction\\b", cur)
@@ -159,7 +166,7 @@ def buffer_fragment(view, pos):
       min_indent = indent
       start = line.a
     cur = line.b
-  return sublime.Region(start, min(pos + 500, view.size()))
+  return sublime.Region(start, min(pos + 500, region.b))
 
 def count_indentation(line):
   count, pos = (0, 0)
@@ -195,6 +202,12 @@ def make_request_py3(port, doc, silent):
     if not silent: sublime.error_message(error.read().decode("utf-8"))
     return None
 
+def view_js_text(view):
+  text = ""
+  for region in view.find_by_selector("source.js"):
+    text += view.substr(region)
+  return text
+
 def run_command(view, query, pos=None, fragments=True, silent=False):
   pfile = get_pfile(view)
   if pfile is None: return
@@ -220,7 +233,7 @@ def run_command(view, query, pos=None, fragments=True, silent=False):
   else:
     doc["files"].append({"type": "full",
                          "name": relative_file(pfile),
-                         "text": view.substr(sublime.Region(0, view.size()))})
+                         "text": view_js_text(view)})
     fname, sending_file = ("#0", True)
   query["file"] = fname
   query["end"] = pos
@@ -251,7 +264,7 @@ def send_buffer(pfile, view):
     make_request(port,
                  {"files": [{"type": "full",
                              "name": relative_file(pfile),
-                             "text": view.substr(sublime.Region(0, view.size()))}]},
+                             "text": view_js_text(view)}]},
                  silent=True)
     pfile.dirty = False
     return True
