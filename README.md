@@ -60,6 +60,10 @@ If your node installation lives somewhere that's not in the default
 path, or your Tern checkout is not where the module expects it to be,
 you'll want to manually set this option.
 
+`tern_arguments` (list of strings) An extra set of arguments to pass
+to the Tern server. For example `--no-port-file` to suppress the
+creation of `.tern-port` files.
+
 Tern uses `.tern-project` files to configure loading libraries and
 plugins for a project. See the [Tern docs][docs] for details.
 

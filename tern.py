@@ -13,6 +13,7 @@ def is_js_file(view):
 files = {}
 arghints_enabled = False
 tern_command = None
+tern_arguments = []
 
 class Listeners(sublime_plugin.EventListener):
   def on_close(self, view):
@@ -128,7 +129,7 @@ def start_server(project):
   if platform.system() == "Darwin":
     env = os.environ.copy()
     env["PATH"] += ":/usr/local/bin"
-  proc = subprocess.Popen(tern_command, cwd=project.dir, env=env,
+  proc = subprocess.Popen(tern_command + tern_arguments, cwd=project.dir, env=env,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=windows)
   output = ""
 
@@ -412,10 +413,11 @@ class TernSelectVariable(sublime_plugin.TextCommand):
     for r in regions: self.view.sel().add(r)
 
 def plugin_loaded():
-  global arghints_enabled, tern_command
+  global arghints_enabled, tern_command, tern_arguments
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", True)
   plugin_dir = os.path.abspath(os.path.dirname(__file__))
+  tern_arguments = settings.get("tern_arguments", [])
   tern_command = settings.get("tern_command", None)
   if tern_command is None:
     if not os.path.isdir(os.path.join(plugin_dir, "node_modules/tern")):
@@ -432,4 +434,4 @@ def plugin_loaded():
     tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
 
 if is_st2:
-  plugin_loaded()
+  sublime.set_timeout(plugin_loaded, 500)
