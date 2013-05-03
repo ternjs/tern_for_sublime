@@ -59,6 +59,7 @@ class Project(object):
   def __init__(self, dir):
     self.dir = dir
     self.port = None
+    self.last_failed = 0
 
 
 def get_pfile(view):
@@ -125,6 +126,7 @@ def server_port(project, ignored=None):
 
 def start_server(project):
   if not tern_command: return None
+  if time.time() - project.last_failed < 30: return None
   env = None
   if platform.system() == "Darwin":
     env = os.environ.copy()
@@ -137,6 +139,7 @@ def start_server(project):
     line = proc.stdout.readline().decode("utf-8")
     if not line:
       sublime.error_message("Failed to start server" + (output and ":\n" + output))
+      project.last_failed = time.time()
       return None
     match = re.match("Listening on port (\\d+)", line)
     if match:
