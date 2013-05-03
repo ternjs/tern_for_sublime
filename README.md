@@ -6,10 +6,7 @@ This is a [Sublime Text][st] (version 2 and 3) package that provides
 [st]: http://www.sublimetext.com/
 [tern]: http://ternjs.net
 
-In JavaScript files, the package will handle autocompletion. When the
-cursor is in an argument list, it will show argument hints for the
-current function in the status bar. (Unfortunately, the status bar is
-*tiny*, and ST provides no proper tooltip functionality.)
+In JavaScript files, the package will handle autocompletion.
 
 The following keys will be found (in JavaScript files):
 
@@ -50,8 +47,12 @@ You should be all set now.
 The plugin will load its settings from `Preferences.sublime-settings`,
 and recognized the following settings:
 
-`tern_argument_hints` (boolean, defaults to true)  
-Whether to show argument hints.
+`tern_argument_hints` (boolean, defaults to false)  
+Whether to show argument hints. When enabled, the status bar will list
+the arguments for the function call that the cursor is inside.
+Unfortunately, the status bar is tiny and Sublime Text provides no
+saner way to show these hints. May impact responsiveness on slow
+machines or big projects.
 
 `tern_command` (list of strings) The command to execute to start a
 Tern server. The default is
