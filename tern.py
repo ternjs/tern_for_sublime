@@ -430,11 +430,12 @@ class TernSelectVariable(sublime_plugin.TextCommand):
     self.view.sel().clear()
     for r in regions: self.view.sel().add(r)
 
+plugin_dir = os.path.abspath(os.path.dirname(__file__))
+
 def plugin_loaded():
   global arghints_enabled, tern_command, tern_arguments
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", True)
-  plugin_dir = os.path.abspath(os.path.dirname(__file__))
   tern_arguments = settings.get("tern_arguments", [])
   tern_command = settings.get("tern_command", None)
   if tern_command is None:
