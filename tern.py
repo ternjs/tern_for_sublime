@@ -8,7 +8,7 @@ python3 = sys.version_info[0] > 2
 is_st2 = int(sublime.version()) < 3000
 
 def is_js_file(view):
-  return view.score_selector(0, "source.js") > 0
+  return view.score_selector(view.sel()[0].b, "source.js") > 0
 
 files = {}
 arghints_enabled = False
@@ -154,7 +154,7 @@ def buffer_fragment(view, pos):
       region = js_region
       break
   if region is None: return sublime.Region(pos, pos)
-  
+
   cur = start = view.line(max(region.a, pos - 1000)).a
   min_indent = 10000
   while True:
@@ -203,9 +203,11 @@ def make_request_py3(port, doc, silent):
     return None
 
 def view_js_text(view):
-  text = ""
+  text, pos = ("", 0)
   for region in view.find_by_selector("source.js"):
+    if region.a > pos: text += ";" + " " * (region.a - pos - 1)
     text += view.substr(region)
+    pos = region.b
   return text
 
 def run_command(view, query, pos=None, fragments=True, silent=False):
