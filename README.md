@@ -70,6 +70,12 @@ plugins for a project. See the [Tern docs][docs] for details.
 
 [docs]: http://ternjs.net/doc/manual.html#configuration
 
+### Automatically Showing Completions
+
+Add `{"selector": "source.js", "characters": "."}` to your `auto_complete_triggers` preference array to automatically show possible completions after a dot is typed after an object name.
+
+Ensure that your `auto_complete` preference is set to `true`. It's enabled by default.
+
 ## Alternative package
 
 There exists also [Sublime Tern][stern], a package with similar goals
