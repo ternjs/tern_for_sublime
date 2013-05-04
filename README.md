@@ -72,7 +72,12 @@ plugins for a project. See the [Tern docs][docs] for details.
 
 ### Automatically Showing Completions
 
-Add `{"selector": "source.js", "characters": "."}` to your `auto_complete_triggers` preference array to automatically show possible completions after a dot is typed after an object name.
+Add `{"selector": "source.js", "characters": "."}` to your `auto_complete_triggers` preference array to automatically show completions after a dot is typed following an object name.
+
+Example:
+```javascript
+"auto_complete_triggers": [ {"selector": "text.html", "characters": "<"}, {"selector": "source.js", "characters": "."} ]
+```
 
 Ensure that your `auto_complete` preference is set to `true`. It's enabled by default.
 
