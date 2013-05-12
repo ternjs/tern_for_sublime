@@ -158,12 +158,15 @@ def buffer_fragment(view, pos):
       break
   if region is None: return sublime.Region(pos, pos)
 
-  cur = start = view.line(max(region.a, pos - 1000)).a
+  start = view.line(max(region.a, pos - 1000)).a
+  if start < pos - 1500: start = pos - 1500
+  cur = start
   min_indent = 10000
   while True:
     next = view.find("\\bfunction\\b", cur)
     if next is None or next.b > pos: break
     line = view.line(next.a)
+    if line.a < pos - 1500: line = sublime.Region(pos - 1500, line.b)
     indent = count_indentation(view.substr(line))
     if indent < min_indent:
       min_indent = indent
