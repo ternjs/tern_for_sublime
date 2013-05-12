@@ -1,7 +1,7 @@
 # Sublime Text plugin for Tern
 
 import sublime, sublime_plugin
-import os, sys, platform, subprocess, webbrowser, json, re, time
+import os, sys, platform, subprocess, webbrowser, json, re, time, atexit
 
 windows = platform.system() == "Windows"
 python3 = sys.version_info[0] > 2
@@ -59,7 +59,11 @@ class Project(object):
   def __init__(self, dir):
     self.dir = dir
     self.port = None
+    self.proc = None
     self.last_failed = 0
+
+  def __del__(self):
+    kill_server(self)
 
 
 def get_pfile(view):
@@ -111,6 +115,8 @@ def maybe_save_pfile(pfile, view, timestamp):
 def server_port(project, ignored=None):
   if project.port is not None and project.port != ignored:
     return (project.port, True)
+  if project.port == ignored:
+    kill_server(project)
 
   port_file = os.path.join(project.dir, ".tern-port")
   if os.path.isfile(port_file):
@@ -143,9 +149,19 @@ def start_server(project):
       return None
     match = re.match("Listening on port (\\d+)", line)
     if match:
+      project.proc = proc
       return int(match.group(1))
     else:
       output += line
+
+def kill_server(project):
+  if project.proc is None: return
+  try:
+    project.proc.terminate()
+    project.proc.wait()
+  except:
+    pass
+  project.proc = None
 
 def relative_file(pfile):
   return pfile.name[len(pfile.project.dir) + 1:]
@@ -427,7 +443,7 @@ class TernSelectVariable(sublime_plugin.TextCommand):
     for ref in data["refs"]:
       if ref["file"] != file:
         if not shown_error:
-          sublime.error_message("Not all uses of this variable are file-local. Selecting only local ones.");
+          sublime.error_message("Not all uses of this variable are file-local. Selecting only local ones.")
           shown_error = True
       else:
         regions.append(sublime.Region(ref["start"], ref["end"]))
@@ -455,6 +471,12 @@ def plugin_loaded():
           sublime.error_message("Installation failed. Try doing 'npm install' manually in " + plugin_dir)
           return
     tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
+
+def cleanup():
+  for f in files.values():
+    kill_server(f.project)
+  
+atexit.register(cleanup)
 
 if is_st2:
   sublime.set_timeout(plugin_loaded, 500)
