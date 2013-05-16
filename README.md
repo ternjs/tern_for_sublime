@@ -56,7 +56,7 @@ machines or big projects.
 
 `tern_command` (list of strings) The command to execute to start a
 Tern server. The default is
-`["node" "/path/to/Packages/tern_for_sublime/node_modules/tern/bin/tern"]`.
+`["node", "/path/to/Packages/tern_for_sublime/node_modules/tern/bin/tern"]`.
 If your node installation lives somewhere that's not in the default
 path, or your Tern checkout is not where the module expects it to be,
 you'll want to manually set this option.
