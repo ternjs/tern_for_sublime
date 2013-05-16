@@ -157,8 +157,11 @@ def start_server(project):
 def kill_server(project):
   if project.proc is None: return
   try:
-    project.proc.terminate()
-    project.proc.wait()
+    if windows:
+      subprocess.call("taskkill /t /f /pid " + str(project.proc.pid), shell=True)
+    else:
+      project.proc.terminate()
+      project.proc.wait()
   except:
     pass
   project.proc = None
