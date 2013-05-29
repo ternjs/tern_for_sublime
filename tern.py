@@ -34,6 +34,8 @@ class Listeners(sublime_plugin.EventListener):
     if pfile is not None: show_argument_hints(pfile, view)
 
   def on_query_completions(self, view, prefix, _locations):
+    if view.score_selector(view.sel()[0].a, 'string.quoted') > 0: return
+
     pfile = get_pfile(view)
     if pfile is None: return None
 
