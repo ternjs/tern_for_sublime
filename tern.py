@@ -471,9 +471,9 @@ def plugin_loaded():
           "\n\nTo get rid of this dialog, either uninstall tern_for_sublime, or set the tern_command setting.",
           "Yes, install."):
         try:
-          subprocess.check_call(["npm", "install"], cwd=plugin_dir)
-        except:
-          sublime.error_message("Installation failed. Try doing 'npm install' manually in " + plugin_dir)
+          subprocess.check_output(["npm", "install"], cwd=plugin_dir)
+        except subprocess.CalledProcessError as e:
+          sublime.error_message("Installation failed. Try doing 'npm install' manually in " + plugin_dir + ". Error message was:\n\n" + e.output)
           return
     tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
 
