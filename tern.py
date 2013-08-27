@@ -205,29 +205,34 @@ def count_indentation(line):
     pos += 1
   return count
 
-def make_request(port, doc, silent=False):
-  if python3:
-    return make_request_py3(port, doc, silent)
-  else:
-    return make_request_py2(port, doc, silent)
-
-def make_request_py2(port, doc, silent):
+def make_request_py2():
   import urllib2
-  try:
-    req = urllib2.urlopen("http://localhost:" + str(port) + "/", json.dumps(doc), 1)
-    return json.loads(req.read())
-  except urllib2.HTTPError as error:
-    if not silent: sublime.error_message(error.read())
-    return None
+  opener = urllib2.build_opener(urllib2.ProxyHandler({}))
+  def f(port, doc, silent=False):
+    try:
+      req = opener.open("http://localhost:" + str(port) + "/", json.dumps(doc), 1)
+      return json.loads(req.read())
+    except urllib2.HTTPError as error:
+      if not silent: sublime.error_message(error.read())
+      return None
+  return f
 
-def make_request_py3(port, doc, silent):
+def make_request_py3():
   import urllib.request, urllib.error
-  try:
-    req = urllib.request.urlopen("http://localhost:" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
-    return json.loads(req.read().decode("utf-8"))
-  except urllib.error.URLError as error:
-    if not silent: sublime.error_message(error.read().decode("utf-8"))
-    return None
+  opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+  def f(port, doc, silent=False):
+    try:
+      req = opener.open("http://localhost:" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
+      return json.loads(req.read().decode("utf-8"))
+    except urllib.error.URLError as error:
+      if not silent: sublime.error_message(error.read().decode("utf-8"))
+      return None
+  return f
+
+if python3:
+  make_request = make_request_py3()
+else:
+  make_request = make_request_py2()
 
 def view_js_text(view):
   text, pos = ("", 0)
