@@ -214,6 +214,9 @@ def make_request(port, doc, silent=False):
 def make_request_py2(port, doc, silent):
   import urllib2
   try:
+    no_proxy = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(no_proxy)
+    urllib2.install_opener(opener)
     req = urllib2.urlopen("http://localhost:" + str(port) + "/", json.dumps(doc), 1)
     return json.loads(req.read())
   except urllib2.HTTPError as error:
@@ -223,6 +226,9 @@ def make_request_py2(port, doc, silent):
 def make_request_py3(port, doc, silent):
   import urllib.request, urllib.error
   try:
+    no_proxy = urllib.request.ProxyHandler({})
+    opener = urllib.request.build_opener(no_proxy)
+    urllib.request.install_opener(opener)
     req = urllib.request.urlopen("http://localhost:" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
     return json.loads(req.read().decode("utf-8"))
   except urllib.error.URLError as error:
@@ -486,7 +492,7 @@ def plugin_loaded():
 def cleanup():
   for f in files.values():
     kill_server(f.project)
-  
+
 atexit.register(cleanup)
 
 if is_st2:
