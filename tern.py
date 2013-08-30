@@ -328,7 +328,7 @@ def ensure_completions_cached(pfile, view):
 
   completions = []
   for rec in data["completions"]:
-    rec_name = re.escape(rec.get('name'))
+    rec_name = rec.get('name').replace('$', '\\$')
     completions.append((rec.get("name") + completion_icon(rec.get("type", None)), rec_name))
   pfile.cached_completions = (data["start"], view.substr(sublime.Region(data["start"], pos)), completions)
   return (completions, True)
