@@ -140,7 +140,8 @@ def start_server(project):
     env = os.environ.copy()
     env["PATH"] += ":/usr/local/bin"
   proc = subprocess.Popen(tern_command + tern_arguments, cwd=project.dir, env=env,
-                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=windows)
+                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, shell=windows)
   output = ""
 
   while True:
@@ -158,14 +159,8 @@ def start_server(project):
 
 def kill_server(project):
   if project.proc is None: return
-  try:
-    if windows:
-      subprocess.call("taskkill /t /f /pid " + str(project.proc.pid), shell=True)
-    else:
-      project.proc.terminate()
-      project.proc.wait()
-  except:
-    pass
+  project.proc.stdin.close()
+  project.proc.wait()
   project.proc = None
 
 def relative_file(pfile):
@@ -486,7 +481,7 @@ def plugin_loaded():
             msg += " Error message was:\n\n" + e.output
           sublime.error_message(msg)
           return
-    tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern")]
+    tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern"), "--no-port-file"]
 
 def cleanup():
   for f in files.values():
