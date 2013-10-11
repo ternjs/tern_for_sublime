@@ -8,7 +8,7 @@ python3 = sys.version_info[0] > 2
 is_st2 = int(sublime.version()) < 3000
 
 def is_js_file(view):
-  return view.score_selector(view.sel()[0].b, "source.js") > 0
+  return view.score_selector(sel_end(view.sel()[0]), "source.js") > 0
 
 files = {}
 arghints_enabled = False
@@ -34,7 +34,7 @@ class Listeners(sublime_plugin.EventListener):
     if pfile is not None: show_argument_hints(pfile, view)
 
   def on_query_completions(self, view, prefix, _locations):
-    if view.score_selector(view.sel()[0].a, 'string.quoted, comment') > 0: return None
+    if view.score_selector(sel_start(view.sel()[0]), 'string.quoted, comment') > 0: return None
 
     pfile = get_pfile(view)
     if pfile is None: return None
@@ -105,9 +105,9 @@ def pfile_modified(pfile, view):
   if now - pfile.last_modified > .5:
     pfile.last_modified = now
     sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
-  if pfile.cached_completions and view.sel()[0].a < pfile.cached_completions[0]:
+  if pfile.cached_completions and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
     pfile.cached_completions = None
-  if pfile.cached_arguments and view.sel()[0].a < pfile.cached_arguments[0]:
+  if pfile.cached_arguments and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
     pfile.cached_arguments = None
 
 def maybe_save_pfile(pfile, view, timestamp):
@@ -199,6 +199,11 @@ def count_indentation(line):
     else: break
     pos += 1
   return count
+
+def sel_start(sel):
+  return min(sel.a, sel.b)
+def sel_end(sel):
+  return max(sel.a, sel.b)
 
 def make_request_py2():
   import urllib2
