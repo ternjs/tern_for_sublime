@@ -20,6 +20,16 @@ class Listeners(sublime_plugin.EventListener):
     files.pop(view.file_name(), None)
 
   def on_deactivated(self, view):
+    if not is_st2: return
+    pfile = files.get(view.file_name(), None)
+    if pfile and pfile.dirty:
+      send_buffer(pfile, view)
+
+  def on_deactivated_async(self, view):
+    """
+      Should be exact same as above function (on_deactivated)
+      but only available in Sublime Text 3...
+    """
     pfile = files.get(view.file_name(), None)
     if pfile and pfile.dirty:
       send_buffer(pfile, view)
