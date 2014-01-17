@@ -15,33 +15,35 @@ arghints_enabled = False
 tern_command = None
 tern_arguments = []
 
+def on_deactivated(view):
+  pfile = files.get(view.file_name(), None)
+  if pfile and pfile.dirty:
+    send_buffer(pfile, view)
+
+def on_selection_modified(view):
+  if not arghints_enabled: return
+  pfile = get_pfile(view)
+  if pfile is not None: show_argument_hints(pfile, view)
+
 class Listeners(sublime_plugin.EventListener):
   def on_close(self, view):
     files.pop(view.file_name(), None)
 
   def on_deactivated(self, view):
-    if not is_st2: return
-    pfile = files.get(view.file_name(), None)
-    if pfile and pfile.dirty:
-      send_buffer(pfile, view)
+    if is_st2: on_deactivated(view)
 
   def on_deactivated_async(self, view):
-    """
-      Should be exact same as above function (on_deactivated)
-      but only available in Sublime Text 3...
-    """
-    pfile = files.get(view.file_name(), None)
-    if pfile and pfile.dirty:
-      send_buffer(pfile, view)
+    on_deactivated(view)
 
   def on_modified(self, view):
     pfile = files.get(view.file_name(), None)
     if pfile: pfile_modified(pfile, view)
 
   def on_selection_modified(self, view):
-    if not arghints_enabled: return
-    pfile = get_pfile(view)
-    if pfile is not None: show_argument_hints(pfile, view)
+    if is_st2: on_selection_modified(view)
+
+  def on_selection_modified_async(self, view):
+    on_selection_modified(view)
 
   def on_query_completions(self, view, prefix, _locations):
     if view.score_selector(sel_start(view.sel()[0]), 'string.quoted, comment') > 0: return None
@@ -114,7 +116,10 @@ def pfile_modified(pfile, view):
   now = time.time()
   if now - pfile.last_modified > .5:
     pfile.last_modified = now
-    sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
+    if is_st2:
+      sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
+    else:
+      sublime.set_async_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
   if pfile.cached_completions and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
     pfile.cached_completions = None
   if pfile.cached_arguments and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
