@@ -116,10 +116,7 @@ def pfile_modified(pfile, view):
   now = time.time()
   if now - pfile.last_modified > .5:
     pfile.last_modified = now
-    if is_st2:
-      sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
-    else:
-      sublime.set_async_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
+    sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
   if pfile.cached_completions and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
     pfile.cached_completions = None
   if pfile.cached_arguments and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
