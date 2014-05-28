@@ -75,6 +75,7 @@ class Project(object):
     self.port = None
     self.proc = None
     self.last_failed = 0
+    self.disabled = False
 
   def __del__(self):
     kill_server(self)
@@ -84,7 +85,10 @@ def get_pfile(view):
   if not is_js_file(view): return None
   fname = view.file_name()
   if fname is None: return None
-  if fname in files: return files[fname]
+  if fname in files:
+    pfile = files[fname]
+    if pfile.project.disabled: return None
+    return pfile
 
   pdir = project_dir(fname)
   if pdir is None: return None
@@ -94,7 +98,9 @@ def get_pfile(view):
     if f.project.dir == pdir:
       project = f.project
       break
-  pfile = files[fname] = ProjectFile(fname, view, project or Project(pdir))
+  if project is None: project = Project(pdir)
+  pfile = files[fname] = ProjectFile(fname, view, project)
+  if project.disabled: return None
   return pfile
 
 def project_dir(fname):
@@ -220,28 +226,32 @@ def sel_start(sel):
 def sel_end(sel):
   return max(sel.a, sel.b)
 
+class Req_Error(Exception):
+  def __init__(self, message):
+    self.message = message
+  def __str__(self):
+    return self.message
+
 def make_request_py2():
   import urllib2
   opener = urllib2.build_opener(urllib2.ProxyHandler({}))
-  def f(port, doc, silent=False):
+  def f(port, doc):
     try:
       req = opener.open("http://localhost:" + str(port) + "/", json.dumps(doc), 1)
       return json.loads(req.read())
     except urllib2.HTTPError as error:
-      if not silent: sublime.error_message(error.read())
-      return None
+      raise Req_Error(error.read())
   return f
 
 def make_request_py3():
   import urllib.request, urllib.error
   opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-  def f(port, doc, silent=False):
+  def f(port, doc):
     try:
       req = opener.open("http://localhost:" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
       return json.loads(req.read().decode("utf-8"))
     except urllib.error.URLError as error:
-      if not silent: sublime.error_message(error.read().decode("utf-8"))
-      return None
+      raise Req_Error(error.read().decode("utf-8"))
   return f
 
 if python3:
@@ -259,7 +269,7 @@ def view_js_text(view):
 
 def run_command(view, query, pos=None, fragments=True, silent=False):
   pfile = get_pfile(view)
-  if pfile is None: return
+  if pfile is None or pfile.project.disabled: return
 
   if isinstance(query, str): query = {"type": query}
   if (pos is None): pos = view.sel()[0].b
@@ -289,8 +299,10 @@ def run_command(view, query, pos=None, fragments=True, silent=False):
 
   data = None
   try:
-    data = make_request(port, doc, silent=silent)
-    if data is None: return None
+    data = make_request(port, doc)
+  except Req_Error as e:
+    if not silent: report_error(str(e), pfile.project)
+    return None
   except:
     pass
 
@@ -298,10 +310,10 @@ def run_command(view, query, pos=None, fragments=True, silent=False):
     try:
       port = server_port(pfile.project, port)[0]
       if port is None: return
-      data = make_request(port, doc, silent=silent)
+      data = make_request(port, doc)
       if data is None: return None
     except Exception as e:
-      if not silent: sublime.error_message(str(e))
+      if not silent: report_error(str(e), pfile.project)
 
   if sending_file: pfile.dirty = False
   return data
@@ -313,12 +325,15 @@ def send_buffer(pfile, view):
     make_request(port,
                  {"files": [{"type": "full",
                              "name": relative_file(pfile),
-                             "text": view_js_text(view)}]},
-                 silent=True)
+                             "text": view_js_text(view)}]})
     pfile.dirty = False
     return True
   except:
     return False
+
+def report_error(message, project):
+  if sublime.ok_cancel_dialog(message, "Disable Tern"):
+    project.disabled = True
 
 def completion_icon(type):
   if type is None or type == "?": return " (?)"
