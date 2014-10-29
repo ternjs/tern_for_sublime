@@ -3,7 +3,7 @@
 This is a [Sublime Text][st] (version 2 and 3) package that provides
 [Tern][tern]-based JavaScript editing support.
 
-##### Note: This plugin has a dependency on tern, a JavaScript code analyzer.
+##### Note: This plugin requires tern, a JavaScript code analyzer, to be installed.
 
 
 [st]: http://www.sublimetext.com/
