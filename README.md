@@ -3,6 +3,9 @@
 This is a [Sublime Text][st] (version 2 and 3) package that provides
 [Tern][tern]-based JavaScript editing support.
 
+##### Note: This plugin requires tern, a JavaScript code analyzer, to be installed.
+
+
 [st]: http://www.sublimetext.com/
 [tern]: http://ternjs.net
 
@@ -39,6 +42,14 @@ a JavaScript program), and install the depedencies of the package.
 
     cd tern_for_sublime
     npm install
+
+
+If you have tern installed globally or it's installed in a different location
+than the default one, you need to edit your user settings:
+`Preferences -> Settings-User`
+insert: `"tern_command": ["/path/to/your/tern"]`
+
+On Linux a symlink to tern can usually be found in `/usr/bin/tern`
 
 You should be all set now.
 
