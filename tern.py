@@ -12,8 +12,10 @@ def is_js_file(view):
 
 files = {}
 arghints_enabled = False
+arghints_type = "status"
 tern_command = None
 tern_arguments = []
+tern_arghint = ""
 
 def on_deactivated(view):
   pfile = files.get(view.file_name(), None)
@@ -384,19 +386,25 @@ def locate_call(view):
 
 def show_argument_hints(pfile, view):
   call_start, argpos = locate_call(view)
-  if call_start is None: return render_argument_hints(pfile, None, 0)
+  if call_start is None: return render_argument_hints(pfile, view, None, 0)
   if pfile.cached_arguments is not None and pfile.cached_arguments[0] == call_start:
-    return render_argument_hints(pfile, pfile.cached_arguments[1], argpos)
+    return render_argument_hints(pfile, view, pfile.cached_arguments[1], argpos)
 
   data = run_command(view, {"type": "type", "preferFunction": True}, call_start, silent=True)
   parsed = data and parse_function_type(data)
   pfile.cached_arguments = (call_start, parsed)
-  render_argument_hints(pfile, parsed, argpos)
+  render_argument_hints(pfile, view, parsed, argpos)
 
-def render_argument_hints(pfile, ftype, argpos):
+def render_argument_hints(pfile, view, ftype, argpos):
+  global tern_arghint
   if ftype is None:
     if pfile.showing_arguments:
-      sublime.status_message("")
+      if arghints_type == "panel":
+        panel = view.window().get_output_panel("tern_arghint")
+        tern_arghint = ""
+        panel.run_command("tern_arghint")
+      elif arghints_type == "status":
+        sublime.status_message("")
       pfile.showing_arguments = False
     return
 
@@ -410,7 +418,14 @@ def render_argument_hints(pfile, ftype, argpos):
   msg += ")"
   if ftype["retval"] is not None:
     msg += " -> " + ftype["retval"]
-  sublime.status_message(msg)
+
+  if arghints_type == "panel":
+    panel = view.window().get_output_panel("tern_arghint")
+    tern_arghint = msg
+    panel.run_command("tern_arghint")
+    view.window().run_command("show_panel", {"panel": "output.tern_arghint"})
+  elif arghints_type == "status":
+    sublime.status_message(msg)
   pfile.showing_arguments = True
 
 def parse_function_type(data):
@@ -446,6 +461,10 @@ def parse_function_type(data):
           "retval": retval}
 
 jump_stack = []
+
+class TernArghintCommand(sublime_plugin.TextCommand):
+  def run(self, edit):
+    self.view.insert(edit, 0, tern_arghint)
 
 class TernJumpToDef(sublime_plugin.TextCommand):
   def run(self, edit, **args):
@@ -493,9 +512,11 @@ class TernSelectVariable(sublime_plugin.TextCommand):
 plugin_dir = os.path.abspath(os.path.dirname(__file__))
 
 def plugin_loaded():
-  global arghints_enabled, tern_command, tern_arguments
+  global arghints_enabled, arghints_type, tern_command, tern_arguments
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", False)
+  if arghints_enabled:
+    arghints_type = settings.get("tern_argument_hints_type", "status")
   tern_arguments = settings.get("tern_arguments", [])
   tern_command = settings.get("tern_command", None)
   if tern_command is None:
@@ -521,7 +542,7 @@ def plugin_loaded():
 def cleanup():
   for f in files.values():
     kill_server(f.project)
-  
+
 atexit.register(cleanup)
 
 if is_st2:
