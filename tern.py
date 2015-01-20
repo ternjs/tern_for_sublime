@@ -264,7 +264,7 @@ else:
 def view_js_text(view):
   text, pos = ("", 0)
   for region in view.find_by_selector("source.js"):
-    if region.a > pos: text += ";" + " " * (region.a - pos - 1)
+    if region.a > pos: text += ";" + re.sub(r'[^\n]', " ", view.substr(sublime.Region(pos + 1, region.a)))
     text += view.substr(region)
     pos = region.b
   return text
