@@ -12,7 +12,7 @@ def is_js_file(view):
 
 files = {}
 arghints_enabled = False
-arghints_type = "status"
+arghints_type = "tooltip"
 tern_command = None
 tern_arguments = []
 tern_arghint = ""
@@ -392,6 +392,8 @@ def show_argument_hints(pfile, view):
 
   data = run_command(view, {"type": "type", "preferFunction": True}, call_start, silent=True)
   parsed = data and parse_function_type(data)
+  parsed['url'] = data.get('url', None)
+  parsed['doc'] = data.get('doc', None)
   pfile.cached_arguments = (call_start, parsed)
   render_argument_hints(pfile, view, parsed, argpos)
 
@@ -426,7 +428,35 @@ def render_argument_hints(pfile, view, ftype, argpos):
     view.window().run_command("show_panel", {"panel": "output.tern_arghint"})
   elif arghints_type == "status":
     sublime.status_message(msg)
+  elif arghints_type == "tooltip":
+    view.show_popup(render_tooltip(ftype, msg), max_width=600, on_navigate=go_to_url)
   pfile.showing_arguments = True
+
+def go_to_url(url=None):
+  if url:
+    import webbrowser
+    webbrowser.open(url)
+
+def render_tooltip(ftype, msg):
+  output = '''
+    <style>
+      div {
+        font-size: 14px;
+      }
+      .bold{
+        font-weight: bold
+      }
+    </style>
+  '''
+  output = output + '<div class="bold">{}</div>'.format(msg)
+  url = '<div><a href={url}>{url}</a></div>'
+  doc = '<div>{doc}</div>'
+
+  if ftype['url']:
+    output += url.format(url=ftype['url'])
+  if ftype['doc']:
+    output += doc.format(doc=ftype['doc'])
+  return output
 
 def parse_function_type(data):
   type = data["type"]
@@ -516,7 +546,9 @@ def plugin_loaded():
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", False)
   if arghints_enabled:
-    arghints_type = settings.get("tern_argument_hints_type", "status")
+    arghints_type = settings.get("tern_argument_hints_type", arghints_type)
+  if arghints_type == "tooltip" and not "show_popup" in dir(sublime.View):
+    arghints_type = "status"
   tern_arguments = settings.get("tern_arguments", [])
   tern_command = settings.get("tern_command", None)
   if tern_command is None:

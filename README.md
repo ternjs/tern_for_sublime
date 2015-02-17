@@ -48,11 +48,16 @@ The plugin will load its settings from `Preferences.sublime-settings`,
 and recognized the following settings:
 
 `tern_argument_hints` (boolean, defaults to false)  
-Whether to show argument hints. When enabled, the status bar will list
+Whether to show argument hints (May impact responsiveness on slow machines or big projects).
+
+`tern_argument_hints_type` (status, panel, tooltip, defaults to tooltip when available, otherwise status)  
+__status__ - When status is enabled, the status bar will list
 the arguments for the function call that the cursor is inside.
-Unfortunately, the status bar is tiny and Sublime Text provides no
-saner way to show these hints. May impact responsiveness on slow
-machines or big projects.
+Unfortunately, the status bar is tiny and Sublime Text 2 provides no saner way to show these hints.  
+__panel__ - When panel is enabled, a new panel window opens and will list
+the arguments for the function call that the cursor is inside.  
+__tooltip__ - (only available on SublimeText build 3070+) When tooltip is enabled, a tooltip opens and will list the arguments for the function call that the cursor is inside, as well as, a clickable URL (if available) to the docs and a snippet of documentation (if available).
+
 
 `tern_command` (list of strings) The command to execute to start a
 Tern server. The default is
