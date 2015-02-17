@@ -392,6 +392,8 @@ def show_argument_hints(pfile, view):
 
   data = run_command(view, {"type": "type", "preferFunction": True}, call_start, silent=True)
   parsed = data and parse_function_type(data)
+  parsed['url'] = data.get('url', None)
+  parsed['doc'] = data.get('doc', None)
   pfile.cached_arguments = (call_start, parsed)
   render_argument_hints(pfile, view, parsed, argpos)
 
@@ -427,8 +429,34 @@ def render_argument_hints(pfile, view, ftype, argpos):
   elif arghints_type == "status":
     sublime.status_message(msg)
   elif arghints_type == "tooltip":
-    view.show_popup(msg)
+    view.show_popup(render_tooltip(ftype, msg), max_width=600, on_navigate=go_to_url)
   pfile.showing_arguments = True
+
+def go_to_url(url=None):
+  if url:
+    import webbrowser
+    webbrowser.open(url)
+
+def render_tooltip(ftype, msg):
+  output = '''
+    <style>
+      div {
+        font-size: 14px;
+      }
+      .bold{
+        font-weight: bold
+      }
+    </style>
+  '''
+  output = output + '<div class="bold">{}</div>'.format(msg)
+  url = '<div><a href={url}>{url}</a></div>'
+  doc = '<div>{doc}</div>'
+
+  if ftype['url']:
+    output += url.format(url=ftype['url'])
+  if ftype['doc']:
+    output += doc.format(doc=ftype['doc'])
+  return output
 
 def parse_function_type(data):
   type = data["type"]
