@@ -426,6 +426,8 @@ def render_argument_hints(pfile, view, ftype, argpos):
     view.window().run_command("show_panel", {"panel": "output.tern_arghint"})
   elif arghints_type == "status":
     sublime.status_message(msg)
+  elif arghints_type == "tooltip":
+    view.show_popup(msg)
   pfile.showing_arguments = True
 
 def parse_function_type(data):
