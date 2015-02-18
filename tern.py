@@ -12,7 +12,9 @@ def is_js_file(view):
 
 files = {}
 arghints_enabled = False
-arghints_type = "tooltip"
+arghints_type = "status"
+if "show_popup" in dir(sublime.View):
+  arghints_type = "tooltip"
 tern_command = None
 tern_arguments = []
 tern_arghint = ""
@@ -547,8 +549,6 @@ def plugin_loaded():
   arghints_enabled = settings.get("tern_argument_hints", False)
   if arghints_enabled:
     arghints_type = settings.get("tern_argument_hints_type", arghints_type)
-  if arghints_type == "tooltip" and not "show_popup" in dir(sublime.View):
-    arghints_type = "status"
   tern_arguments = settings.get("tern_arguments", [])
   tern_command = settings.get("tern_command", None)
   if tern_command is None:
