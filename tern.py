@@ -234,12 +234,14 @@ class Req_Error(Exception):
   def __str__(self):
     return self.message
 
+localhost = (windows and "127.0.0.1") or "localhost"
+
 def make_request_py2():
   import urllib2
   opener = urllib2.build_opener(urllib2.ProxyHandler({}))
   def f(port, doc):
     try:
-      req = opener.open("http://localhost:" + str(port) + "/", json.dumps(doc), 1)
+      req = opener.open("http://" + localhost + ":" + str(port) + "/", json.dumps(doc), 1)
       return json.loads(req.read())
     except urllib2.HTTPError as error:
       raise Req_Error(error.read())
@@ -250,7 +252,7 @@ def make_request_py3():
   opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
   def f(port, doc):
     try:
-      req = opener.open("http://localhost:" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
+      req = opener.open("http://" + localhost + ":" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
       return json.loads(req.read().decode("utf-8"))
     except urllib.error.URLError as error:
       raise Req_Error(error.read().decode("utf-8"))
