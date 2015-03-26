@@ -431,7 +431,7 @@ def render_argument_hints(pfile, view, ftype, argpos):
   elif arghints_type == "status":
     sublime.status_message(msg)
   elif arghints_type == "tooltip":
-    view.show_popup(render_tooltip(ftype, msg), max_width=600, on_navigate=go_to_url)
+    view.show_popup(render_tooltip(ftype, msg), sublime.COOPERATE_WITH_AUTO_COMPLETE, max_width=600, on_navigate=go_to_url)
   pfile.showing_arguments = True
 
 def go_to_url(url=None):
