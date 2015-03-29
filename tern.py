@@ -13,6 +13,7 @@ def is_js_file(view):
 files = {}
 arghints_enabled = False
 arghints_type = "status"
+arg_completion_enabled = False
 tern_command = None
 tern_arguments = []
 tern_arghint = ""
@@ -348,6 +349,45 @@ def completion_icon(type):
   if type == "bool": return " (bool)"
   return " (obj)"
 
+def fn_completion_icon(arguments):
+  return " (fn/"+str(len(arguments))+")"
+
+# create auto complete string from list arguments
+def create_arg_str(arguments):
+  arg_str = ""
+  k = 1
+  for argument in arguments:
+    arg_str += "${" + str(k) + ":" + argument + "}, "
+    k += 1
+  return arg_str[0:-2]
+
+# parse the type to get the arguments
+def get_arguments(type):
+  type = type[3:type.find(')')] + ",'"
+  arg_list = []
+  arg_start = 0
+  arg_end = 0
+  depth = 0
+  arg_already = False
+  for ch in type:
+    if depth == 0 and ch == ',':
+      if arg_already:
+        arg_already = False
+      elif arg_start != arg_end:
+        arg_list.append(type[arg_start:arg_end])
+      arg_start = arg_end+1
+    elif depth == 0 and ch == ':':
+      arg_already = True
+      arg_list.append(type[arg_start:arg_end])
+    elif ch == '{' or ch == '(' or ch == '[':
+      depth += 1
+    elif ch == '}' or ch == ')' or ch == ']':
+      depth -= 1
+    elif ch == ' ':
+      arg_start = arg_end + 1
+    arg_end += 1
+  return arg_list
+
 def ensure_completions_cached(pfile, view):
   pos = view.sel()[0].b
   if pfile.cached_completions is not None:
@@ -361,9 +401,27 @@ def ensure_completions_cached(pfile, view):
   if data is None: return (None, False)
 
   completions = []
+  completions_arity = []
   for rec in data["completions"]:
     rec_name = rec.get('name').replace('$', '\\$')
-    completions.append((rec.get("name") + completion_icon(rec.get("type", None)), rec_name))
+    rec_type = rec.get("type", None)
+    if arg_completion_enabled:
+      if completion_icon(rec_type) == " (fn)":
+        arguments = get_arguments(rec_type)
+        fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
+        completions.append((rec.get("name") + fn_completion_icon(arguments), fn_name))
+
+        for i in range(len(arguments) - 1, -1, -1):
+          fn_name = rec_name + "(" + create_arg_str(arguments[0:i]) + ")"
+          completions_arity.append((rec.get("name") + fn_completion_icon(arguments[0:i]), fn_name))
+      else:
+        completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
+    else:
+      completions.append((rec_name + completion_icon(rec_type), rec_name))
+
+  # put the auto completions of functions with lower arity at the bottom of the autocomplete list
+  # so they don't clog up the autocompeltions at the top of the list
+  completions = completions + completions_arity
   pfile.cached_completions = (data["start"], view.substr(sublime.Region(data["start"], pos)), completions)
   return (completions, True)
 
@@ -545,8 +603,10 @@ plugin_dir = os.path.abspath(os.path.dirname(__file__))
 
 def plugin_loaded():
   global arghints_enabled, arghints_type, tern_command, tern_arguments
+  global arg_completion_enabled
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", False)
+  arg_completion_enabled = settings.get("tern_argument_completion", False)
   if arghints_enabled:
     if "show_popup" in dir(sublime.View):
       arghints_type = "tooltip"
