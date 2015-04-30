@@ -613,6 +613,8 @@ def plugin_loaded():
       arghints_type = "tooltip"
     arghints_type = settings.get("tern_argument_hints_type", arghints_type)
   tern_arguments = settings.get("tern_arguments", [])
+  if not isinstance(tern_arguments, list):
+    tern_arguments = [tern_arguments]
   tern_command = settings.get("tern_command", None)
   if tern_command is None:
     if not os.path.isdir(os.path.join(plugin_dir, "node_modules/tern")):
