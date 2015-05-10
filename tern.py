@@ -2,6 +2,11 @@
 
 import sublime, sublime_plugin
 import os, sys, platform, subprocess, webbrowser, json, re, time, atexit
+try:
+  # python 2
+  from utils.renderer import create_arghints_renderer
+except:
+  from .utils.renderer import create_arghints_renderer
 
 windows = platform.system() == "Windows"
 python3 = sys.version_info[0] > 2
@@ -12,11 +17,10 @@ def is_js_file(view):
 
 files = {}
 arghints_enabled = False
-arghints_type = "status"
+arghints_renderer = None
 arg_completion_enabled = False
 tern_command = None
 tern_arguments = []
-tern_arghint = ""
 
 def on_deactivated(view):
   pfile = files.get(view.file_name(), None)
@@ -453,71 +457,17 @@ def show_argument_hints(pfile, view):
   data = run_command(view, {"type": "type", "preferFunction": True}, call_start, silent=True)
   if data is not None:
     parsed = parse_function_type(data)
-    parsed['url'] = data.get('url', None)
-    parsed['doc'] = data.get('doc', None)
-    pfile.cached_arguments = (call_start, parsed)
-    render_argument_hints(pfile, view, parsed, argpos)
+    if parsed is not None:
+      parsed['url'] = data.get('url', None)
+      parsed['doc'] = data.get('doc', None)
+      pfile.cached_arguments = (call_start, parsed)
+      render_argument_hints(pfile, view, parsed, argpos)
 
 def render_argument_hints(pfile, view, ftype, argpos):
-  global tern_arghint
   if ftype is None:
-    if pfile.showing_arguments:
-      if arghints_type == "panel":
-        panel = view.window().get_output_panel("tern_arghint")
-        tern_arghint = ""
-        panel.run_command("tern_arghint")
-      elif arghints_type == "status":
-        sublime.status_message("")
-      pfile.showing_arguments = False
-    return
-
-  msg = ftype["name"] + "("
-  i = 0
-  for name, type in ftype["args"]:
-    if i > 0: msg += ", "
-    if i == argpos: msg += "*"
-    msg += name + ("" if type == "?" else ": " + type)
-    i += 1
-  msg += ")"
-  if ftype["retval"] is not None:
-    msg += " -> " + ftype["retval"]
-
-  if arghints_type == "panel":
-    panel = view.window().get_output_panel("tern_arghint")
-    tern_arghint = msg
-    panel.run_command("tern_arghint")
-    view.window().run_command("show_panel", {"panel": "output.tern_arghint"})
-  elif arghints_type == "status":
-    sublime.status_message(msg)
-  elif arghints_type == "tooltip":
-    view.show_popup(render_tooltip(ftype, msg), sublime.COOPERATE_WITH_AUTO_COMPLETE, max_width=600, on_navigate=go_to_url)
-  pfile.showing_arguments = True
-
-def go_to_url(url=None):
-  if url:
-    import webbrowser
-    webbrowser.open(url)
-
-def render_tooltip(ftype, msg):
-  output = '''
-    <style>
-      div {
-        font-size: 14px;
-      }
-      .bold{
-        font-weight: bold
-      }
-    </style>
-  '''
-  output = output + '<div class="bold">{}</div>'.format(msg)
-  url = '<div><a href={url}>{url}</a></div>'
-  doc = '<div>{doc}</div>'
-
-  if ftype['url']:
-    output += url.format(url=ftype['url'])
-  if ftype['doc']:
-    output += doc.format(doc=ftype['doc'])
-  return output
+    arghints_renderer.clean(pfile, view)
+  else:
+    arghints_renderer.render(pfile, view, ftype, argpos)
 
 def parse_function_type(data):
   type = data["type"]
@@ -554,8 +504,8 @@ def parse_function_type(data):
 jump_stack = []
 
 class TernArghintCommand(sublime_plugin.TextCommand):
-  def run(self, edit):
-    self.view.insert(edit, 0, tern_arghint)
+  def run(self, edit, **args):
+    self.view.insert(edit, 0, args.get('msg', ''))
 
 class TernJumpToDef(sublime_plugin.TextCommand):
   def run(self, edit, **args):
@@ -603,15 +553,18 @@ class TernSelectVariable(sublime_plugin.TextCommand):
 plugin_dir = os.path.abspath(os.path.dirname(__file__))
 
 def plugin_loaded():
-  global arghints_enabled, arghints_type, tern_command, tern_arguments
+  global arghints_enabled, arghints_renderer, tern_command, tern_arguments
   global arg_completion_enabled
   settings = sublime.load_settings("Preferences.sublime-settings")
   arghints_enabled = settings.get("tern_argument_hints", False)
   arg_completion_enabled = settings.get("tern_argument_completion", False)
   if arghints_enabled:
     if "show_popup" in dir(sublime.View):
-      arghints_type = "tooltip"
-    arghints_type = settings.get("tern_argument_hints_type", arghints_type)
+      default_arghints_type = "tooltip"
+    else:
+      default_arghints_type = "status"
+    arghints_type = settings.get("tern_argument_hints_type", default_arghints_type)
+    arghints_renderer = create_arghints_renderer(arghints_type)
   tern_arguments = settings.get("tern_arguments", [])
   if not isinstance(tern_arguments, list):
     tern_arguments = [tern_arguments]
