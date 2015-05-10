@@ -57,11 +57,6 @@ def get_html_message_from_ftype(ftype, argpos):
   if ftype["retval"] is not None:
     func_signature += '<span class="func-arrow"> ➜ </span><span class="type">{type}</span>'.format(type=ftype["retval"])
 
-  if ftype['doc']:
-    doc = '<p>'.join(ftype['doc'].split('\n'))
-  else:
-    doc = ''
-
   template = '''
     {style}
     <div class="hint-popup">
@@ -75,7 +70,7 @@ def get_html_message_from_ftype(ftype, argpos):
     'style': style,
     'func_signature': hint_line(func_signature),
     'doc_link': hint_line(link(ftype['url'])),
-    'doc': hint_line(doc)
+    'doc': hint_line(ftype['doc'])
   }
 
   return template.format(**template_data)
