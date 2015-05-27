@@ -453,10 +453,11 @@ def show_argument_hints(pfile, view):
   data = run_command(view, {"type": "type", "preferFunction": True}, call_start, silent=True)
   if data is not None:
     parsed = parse_function_type(data)
-    parsed['url'] = data.get('url', None)
-    parsed['doc'] = data.get('doc', None)
-    pfile.cached_arguments = (call_start, parsed)
-    render_argument_hints(pfile, view, parsed, argpos)
+    if parsed is not None:
+      parsed['url'] = data.get('url', None)
+      parsed['doc'] = data.get('doc', None)
+      pfile.cached_arguments = (call_start, parsed)
+      render_argument_hints(pfile, view, parsed, argpos)
 
 def render_argument_hints(pfile, view, ftype, argpos):
   global tern_arghint
