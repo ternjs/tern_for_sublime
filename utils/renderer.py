@@ -66,11 +66,15 @@ def get_html_message_from_ftype(ftype, argpos):
     </div>
   '''
 
+  # Line-separate @-attributes
+  doc = ftype['doc']
+  if doc: doc = re.sub(r" @(.)", r"<br>@\1", doc)
+
   template_data = {
     'style': style,
     'func_signature': hint_line(func_signature),
     'doc_link': hint_line(link(ftype['url'])),
-    'doc': hint_line(ftype['doc'])
+    'doc': hint_line(doc)
   }
 
   return template.format(**template_data)
