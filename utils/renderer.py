@@ -68,7 +68,7 @@ def get_html_message_from_ftype(ftype, argpos):
 
   # Line-separate @-attributes
   doc = ftype['doc']
-  if doc: doc = re.sub(r"(?:\@)(.)", r"<br>@\1", doc)
+  if doc: doc = re.sub(r" @(.)", r"<br>@\1", doc)
 
   template_data = {
     'style': style,
