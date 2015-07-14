@@ -40,6 +40,10 @@ a JavaScript program), and install the depedencies of the package.
     cd tern_for_sublime
     npm install
 
+On OS X, you might also need to install the [Fix Mac
+Path](https://github.com/int3h/SublimeFixMacPath) Sublime plugin to
+help ST actually find your node binary.
+
 You should be all set now.
 
 ## Configuration
