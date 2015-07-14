@@ -1,3 +1,5 @@
+# encoding=utf8
+
 import sublime
 
 def get_message_from_ftype(ftype, argpos):
