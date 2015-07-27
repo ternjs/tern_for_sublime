@@ -1,0 +1,80 @@
+[
+    {
+        "id": "tools",
+        "children":
+        [
+            {
+                "id": "tern",
+                "caption": "Tern",
+                "children":
+                [
+                    {
+                        "caption": "Jump to definition",
+                        "command": "tern_jump_to_def"
+                    },
+                    {
+                        "caption": "Jump back",
+                        "command": "tern_jump_back"
+                    },
+                    {
+                        "caption": "Select all references",
+                        "command": "tern_select_variable"
+                    },
+                ]
+            }
+        ]
+    },
+    {
+        "caption": "Preferences",
+        "id": "preferences",
+        "mnemonic": "n",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "id": "package-settings",
+                "mnemonic": "P",
+                "children":
+                [
+                    {
+                        "caption": "Tern",
+                        "children":
+                        [
+                            {
+                                "caption": "Settings – Default",
+                                "command": "open_file", "args":
+                                {
+                                    "file": "${packages}/tern_for_sublime/Tern.sublime-settings"
+                                }
+                            },
+                            {
+                                "caption": "Settings – User",
+                                "command": "open_file", "args":
+                                {
+                                    "file": "${packages}/User/Tern.sublime-settings"
+                                }
+                            },
+                            {
+                                "caption": "-"
+                            },
+                            {
+                                "caption": "Key Bindings – Default",
+                                "command": "open_file", "args":
+                                {
+                                    "file": "${packages}/tern_for_sublime/Tern.sublime-keymap"
+                                }
+                            },
+                            {
+                                "caption": "Key Bindings – User",
+                                "command": "open_file", "args":
+                                {
+                                    "file": "${packages}/User/Tern.sublime-keymap"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

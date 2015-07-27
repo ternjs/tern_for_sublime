@@ -1,0 +1,21 @@
+[
+    {
+        "id": "tern",
+        "caption": "Tern",
+        "children":
+        [
+            {
+                "caption": "Jump to definition",
+                "command": "tern_jump_to_def"
+            },
+            {
+                "caption": "Jump back",
+                "command": "tern_jump_back"
+            },
+            {
+                "caption": "Select all references",
+                "command": "tern_select_variable"
+            }
+        ]
+    }
+]
