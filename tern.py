@@ -550,25 +550,36 @@ class TernSelectVariable(sublime_plugin.TextCommand):
     self.view.sel().clear()
     for r in regions: self.view.sel().add(r)
 
+# fetch a certain setting from the package settings file and if it doesn't exist check the
+# Preferences.sublime-settings file for backwards compatibility.
+def get_setting(key, default):
+  old_settings = sublime.load_settings("Preferences.sublime-settings")
+  new_settings = sublime.load_settings("Tern.sublime-settings")
+
+  setting = new_settings.get(key, None)
+  if setting is None:
+    return old_settings.get(key, default)
+  else:
+    return new_settings.get(key, default)
+
 plugin_dir = os.path.abspath(os.path.dirname(__file__))
 
 def plugin_loaded():
   global arghints_enabled, arghints_renderer, tern_command, tern_arguments
   global arg_completion_enabled
-  settings = sublime.load_settings("Preferences.sublime-settings")
-  arghints_enabled = settings.get("tern_argument_hints", False)
-  arg_completion_enabled = settings.get("tern_argument_completion", False)
+  arghints_enabled = get_setting("tern_argument_hints", False)
+  arg_completion_enabled = get_setting("tern_argument_completion", False)
   if arghints_enabled:
     if "show_popup" in dir(sublime.View):
       default_arghints_type = "tooltip"
     else:
       default_arghints_type = "status"
-    arghints_type = settings.get("tern_argument_hints_type", default_arghints_type)
+    arghints_type = get_setting("tern_argument_hints_type", default_arghints_type)
     arghints_renderer = create_arghints_renderer(arghints_type)
-  tern_arguments = settings.get("tern_arguments", [])
+  tern_arguments = get_setting("tern_arguments", [])
   if not isinstance(tern_arguments, list):
     tern_arguments = [tern_arguments]
-  tern_command = settings.get("tern_command", None)
+  tern_command = get_setting("tern_command", None)
   if tern_command is None:
     if not os.path.isdir(os.path.join(plugin_dir, "node_modules/tern")):
       if sublime.ok_cancel_dialog(

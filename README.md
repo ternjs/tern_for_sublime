@@ -48,7 +48,7 @@ You should be all set now.
 
 ## Configuration
 
-The plugin will load its settings from `Preferences.sublime-settings`,
+The plugin will load its settings from `Tern.sublime-settings` (found in Preferences > Package Settings > Tern),
 and recognized the following settings:
 
 `tern_argument_hints` (boolean, defaults to false)  
