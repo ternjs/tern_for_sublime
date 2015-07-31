@@ -19,7 +19,7 @@
                     {
                         "caption": "Select all references",
                         "command": "tern_select_variable"
-                    },
+                    }
                 ]
             }
         ]
