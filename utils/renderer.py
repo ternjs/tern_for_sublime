@@ -1,5 +1,7 @@
 # encoding=utf8
 
+import textwrap
+
 import sublime
 
 def get_message_from_ftype(ftype, argpos):
@@ -13,6 +15,8 @@ def get_message_from_ftype(ftype, argpos):
   msg += ")"
   if ftype["retval"] is not None:
     msg += " -> " + ftype["retval"]
+  if ftype['doc'] is not None:
+    msg += "\n\n" + textwrap.fill(ftype['doc'], width=79)
   return msg
 
 def get_html_message_from_ftype(ftype, argpos):
@@ -110,7 +114,7 @@ class TooltipArghintsRenderer(object):
 class StatusArghintsRenderer(object):
   def render(self, pfile, view, ftype, argpos):
     msg = get_message_from_ftype(ftype, argpos)
-    sublime.status_message(msg)
+    sublime.status_message(msg.split('\n')[0])
     pfile.showing_arguments = True
 
   def clean(self, pfile, view):
