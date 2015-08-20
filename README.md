@@ -103,12 +103,3 @@ Example:
 ```
 
 Ensure that your `auto_complete` preference is set to `true`. It's enabled by default.
-
-## Alternative package
-
-There exists also [Sublime Tern][stern], a package with similar goals
-(Tern integration for ST). It exposes a slightly different set of
-functionality, and uses the PyV8 bridge, rather than node.js, to run
-the Tern server.
-
-[stern]: https://github.com/emmetio/sublime-tern
