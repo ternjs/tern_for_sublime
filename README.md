@@ -8,7 +8,7 @@ This is a [Sublime Text][st] (version 2 and 3) package that provides
 
 In JavaScript files, the package will handle autocompletion.
 
-The following keys will be found (in JavaScript files):
+The following keys will be bound (in JavaScript files):
 
 `alt+.`  
 Jump to the definition of the thing that the cursor is pointing at. If
