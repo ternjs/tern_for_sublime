@@ -358,10 +358,12 @@ def fn_completion_icon(arguments):
 
 # create auto complete string from list arguments
 def create_arg_str(arguments):
+  if len(arguments) ==  0:
+    return "${1}"
   arg_str = ""
   k = 1
   for argument in arguments:
-    arg_str += "${" + str(k) + ":" + argument + "}, "
+    arg_str += "${" + str(k) + ":" + argument.replace("$", "\$") + "}, "
     k += 1
   return arg_str[0:-2]
 
@@ -371,6 +373,7 @@ def get_arguments(type):
   arg_list = []
   arg_start = 0
   arg_end = 0
+  # this two variables are used to skip ': {...}' in signature like 'a: {...}'
   depth = 0
   arg_already = False
   for ch in type:
@@ -409,8 +412,8 @@ def ensure_completions_cached(pfile, view):
   for rec in data["completions"]:
     rec_name = rec.get('name').replace('$', '\\$')
     rec_type = rec.get("type", None)
-    if arg_completion_enabled:
-      if completion_icon(rec_type) == " (fn)":
+    if completion_icon(rec_type) == " (fn)":
+      if arg_completion_enabled:
         arguments = get_arguments(rec_type)
         fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
         completions.append((rec.get("name") + fn_completion_icon(arguments), fn_name))
@@ -419,9 +422,9 @@ def ensure_completions_cached(pfile, view):
           fn_name = rec_name + "(" + create_arg_str(arguments[0:i]) + ")"
           completions_arity.append((rec.get("name") + fn_completion_icon(arguments[0:i]), fn_name))
       else:
-        completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
+        completions.append((rec.get("name") + completion_icon(rec_type), rec_name + "(${1})"))
     else:
-      completions.append((rec_name + completion_icon(rec_type), rec_name))
+      completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
 
   # put the auto completions of functions with lower arity at the bottom of the autocomplete list
   # so they don't clog up the autocompeltions at the top of the list
