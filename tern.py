@@ -595,7 +595,7 @@ def plugin_loaded():
             subprocess.check_output(["npm", "install"], cwd=plugin_dir)
           else:
             subprocess.check_call(["npm", "install"], cwd=plugin_dir)
-        except subprocess.CalledProcessError as e:
+        except (IOError, OSError) as e:
           msg = "Installation failed. Try doing 'npm install' manually in " + plugin_dir + "."
           if hasattr(e, "output"):
             msg += " Error message was:\n\n" + e.output
