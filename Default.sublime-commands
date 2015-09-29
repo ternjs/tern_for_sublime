@@ -1,0 +1,14 @@
+[
+  {
+    "caption": "tern_for_sublime: Jump to Definition",
+    "command": "tern_jump_to_def"
+  },
+  {
+    "caption": "tern_for_sublime: Jump Back",
+    "command": "tern_jump_back"
+  },
+  {
+    "caption": "tern_for_sublime: Select Variable",
+    "command": "tern_select_variable"
+  }
+]
