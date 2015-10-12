@@ -17,6 +17,12 @@
 	],
 	"settings":
 	{
-		"tab_size": 2
+		// Sublime Text
+		"tab_size": 2,
+		// Anaconda
+		"pep8_ignore":
+		[
+			"E111"
+		]
 	}
 }
