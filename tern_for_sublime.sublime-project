@@ -1,0 +1,30 @@
+{
+  "build_systems":
+  [
+    {
+      "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+      "name": "Anaconda Python Builder",
+      "selector": "source.python",
+      "shell_cmd": "python -u \"$file\""
+    }
+  ],
+  "folders":
+  [
+    {
+      "path": ".",
+      "folder_exclude_patterns": ["node_modules"]
+    }
+  ],
+  "settings":
+  {
+    // Sublime Text
+    "tab_size": 2,
+    // Anaconda
+    "pep8_ignore":
+    [
+      "E111",
+      "E114",
+      "E701"
+    ]
+  }
+}
