@@ -22,7 +22,8 @@
 		// Anaconda
 		"pep8_ignore":
 		[
-			"E111"
+			"E111",
+			"E114"
 		]
 	}
 }
