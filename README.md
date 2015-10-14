@@ -93,13 +93,17 @@ plugins for a project. See the [Tern docs][docs] for details.
 ### Automatically Showing Completions
 
 Add `{"selector": "source.js", "characters": "."}` to your
-`auto_complete_triggers` array in the Sublime Text preferences to
+`auto_complete_triggers` array in the Sublime Text preferences (found in Sublime Text > Preferences > Settings - User) to
 automatically show completions after a dot is typed following an
-object name.
+object name. 
 
 Example:
 ```javascript
 "auto_complete_triggers": [ {"selector": "text.html", "characters": "<"}, {"selector": "source.js", "characters": "."} ]
 ```
+
+If you don't have an item named `auto_complete_triggers`, just add it after the last one (after adding a comma) like so:
+
+![](http://i.imgur.com/pptihb7.png)
 
 Ensure that your `auto_complete` preference is set to `true`. It's enabled by default.
