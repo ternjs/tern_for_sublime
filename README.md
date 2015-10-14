@@ -102,7 +102,7 @@ Example:
 "auto_complete_triggers": [ {"selector": "text.html", "characters": "<"}, {"selector": "source.js", "characters": "."} ]
 ```
 
-If you don't have an item named `auto_complete_triggers`, just add it after the last one (after adding a comma) like so:
+If you don't have already an item named `auto_complete_triggers`, just add it after the last one (after adding a comma) like so:
 
 ![](http://i.imgur.com/pptihb7.png)
 
