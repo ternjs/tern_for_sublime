@@ -4,9 +4,9 @@ import sublime, sublime_plugin
 import os, sys, platform, subprocess, webbrowser, json, re, time, atexit
 try:
   # python 2
-  from utils.renderer import create_arghints_renderer
+  from utils.renderer import create_renderer
 except:
-  from .utils.renderer import create_arghints_renderer
+  from .utils.renderer import create_renderer
 
 windows = platform.system() == "Windows"
 python3 = sys.version_info[0] > 2
@@ -17,7 +17,7 @@ def is_js_file(view):
 
 files = {}
 arghints_enabled = False
-arghints_renderer = None
+renderer = None
 arg_completion_enabled = False
 tern_command = None
 tern_arguments = []
@@ -468,9 +468,9 @@ def show_argument_hints(pfile, view):
 
 def render_argument_hints(pfile, view, ftype, argpos):
   if ftype is None:
-    arghints_renderer.clean(pfile, view)
+    renderer.clean(pfile, view)
   else:
-    arghints_renderer.render(pfile, view, ftype, argpos)
+    renderer.render_arghints(pfile, view, ftype, argpos)
 
 def parse_function_type(data):
   type = data["type"]
@@ -568,7 +568,7 @@ def get_setting(key, default):
 plugin_dir = os.path.abspath(os.path.dirname(__file__))
 
 def plugin_loaded():
-  global arghints_enabled, arghints_renderer, tern_command, tern_arguments
+  global arghints_enabled, renderer, tern_command, tern_arguments
   global arg_completion_enabled
   arghints_enabled = get_setting("tern_argument_hints", False)
   arg_completion_enabled = get_setting("tern_argument_completion", False)
@@ -578,7 +578,7 @@ def plugin_loaded():
     else:
       default_arghints_type = "status"
     arghints_type = get_setting("tern_argument_hints_type", default_arghints_type)
-    arghints_renderer = create_arghints_renderer(arghints_type)
+    renderer = create_renderer(arghints_type)
   tern_arguments = get_setting("tern_arguments", [])
   if not isinstance(tern_arguments, list):
     tern_arguments = [tern_arguments]

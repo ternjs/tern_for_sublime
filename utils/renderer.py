@@ -1,5 +1,6 @@
 # encoding=utf8
 
+import abc
 import textwrap
 
 import sublime
@@ -102,46 +103,94 @@ def go_to_url(url=None):
     import webbrowser
     webbrowser.open(url)
 
-class TooltipArghintsRenderer(object):
-  def render(self, pfile, view, ftype, argpos):
-    view.show_popup(get_html_message_from_ftype(ftype, argpos), sublime.COOPERATE_WITH_AUTO_COMPLETE, max_width=600, on_navigate=go_to_url)
+
+class RendererBase(object):
+  """Class that renders Tern messages."""
+
+  __metaclass__ = abc.ABCMeta
+
+  @abc.abstractmethod
+  def _render_impl(self, pfile, view, message):
+    """Render the message.
+
+    Implement this to define how subclasses render the message.
+    """
+
+  def _clean_impl(self, pfile, view):
+    """Clean rendered content.
+
+    Override this to define subclass-specific cleanup.
+    """
+    pass
+
+  def render_arghints(self, pfile, view, ftype, argpos):
+    """Render argument hints."""
+
+    if self.useHTML:
+      message = get_html_message_from_ftype(ftype, argpos)
+    else:
+      message = get_message_from_ftype(ftype, argpos)
+    self._render_impl(pfile, view, message)
     pfile.showing_arguments = True
 
   def clean(self, pfile, view):
+    """Clean rendered content."""
+
+    self._clean_impl(pfile, view)
     pfile.showing_arguments = False
 
 
-class StatusArghintsRenderer(object):
-  def render(self, pfile, view, ftype, argpos):
-    msg = get_message_from_ftype(ftype, argpos)
-    sublime.status_message(msg.split('\n')[0])
-    pfile.showing_arguments = True
+class TooltipRenderer(RendererBase):
+  """Class that renders Tern messages in a tooltip."""
 
-  def clean(self, pfile, view):
+  def __init__(self):
+    self.useHTML = True  # Used in RendererBase
+
+  def _render_impl(self, pfile, view, message):
+    view.show_popup(message, sublime.COOPERATE_WITH_AUTO_COMPLETE,
+                    max_width=600, on_navigate=go_to_url)
+
+
+class StatusRenderer(RendererBase):
+  """Class that renders Tern messages in the status bar."""
+
+  def __init__(self):
+    self.useHTML = False
+
+  def _render_impl(self, pfile, view, message):
+    sublime.status_message(message.split('\n')[0])
+
+  def _clean_impl(self, pfile, view):
     if pfile.showing_arguments:
       sublime.status_message("")
-      pfile.showing_arguments = False
 
 
-class PanelArghintsRenderer(object):
-  def render(self, pfile, view, ftype, argpos):
-    msg = get_message_from_ftype(ftype, argpos)
+class PanelRenderer(RendererBase):
+  """Class that renders Tern messages in a panel."""
+
+  def __init__(self):
+    self.useHTML = False
+
+  def _render_impl(self, pfile, view, message):
     panel = view.window().get_output_panel("tern_arghint")
-    panel.run_command("tern_arghint", {"msg": msg})
+    panel.run_command("tern_arghint", {"msg": message})
     view.window().run_command("show_panel", {"panel": "output.tern_arghint"})
-    pfile.showing_arguments = True
 
-  def clean(self, pfile, view):
+  def _clean_impl(self, pfile, view):
     if pfile.showing_arguments:
       panel = view.window().get_output_panel("tern_arghint")
       panel.run_command("tern_arghint", {"msg": ""})
-      pfile.showing_arguments = False
 
 
-def create_arghints_renderer(arghints_type):
+def create_renderer(arghints_type):
+  """Create the correct renderer based on type.
+
+  Currently supported types are "tooltip", "status", and "panel".
+  """
+
   if arghints_type == "tooltip":
-    return TooltipArghintsRenderer()
+    return TooltipRenderer()
   elif arghints_type == "status":
-    return StatusArghintsRenderer()
+    return StatusRenderer()
   elif arghints_type == "panel":
-    return PanelArghintsRenderer()
+    return PanelRenderer()
