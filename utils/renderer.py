@@ -147,9 +147,8 @@ class TooltipRenderer(RendererBase):
     self.useHTML = True  # Used in RendererBase
 
   def _render_impl(self, pfile, view, message):
-    view.show_popup(
-      message, sublime.COOPERATE_WITH_AUTO_COMPLETE,
-      max_width=600, on_navigate=go_to_url)
+    view.show_popup(message, sublime.COOPERATE_WITH_AUTO_COMPLETE,
+                    max_width=600, on_navigate=go_to_url)
 
 
 class StatusRenderer(RendererBase):
