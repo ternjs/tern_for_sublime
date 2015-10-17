@@ -121,10 +121,9 @@ class RendererBase(object):
 
     Override this to define subclass-specific cleanup.
     """
-
     pass
 
-  def render(self, pfile, view, ftype, argpos):
+  def render_arghints(self, pfile, view, ftype, argpos):
     """Render argument hints."""
 
     if self.useHTML:
@@ -141,7 +140,7 @@ class RendererBase(object):
     pfile.showing_arguments = False
 
 
-class TooltipArghintsRenderer(RendererBase):
+class TooltipRenderer(RendererBase):
   """Class that renders Tern messages in a tooltip."""
 
   def __init__(self):
@@ -153,7 +152,7 @@ class TooltipArghintsRenderer(RendererBase):
       max_width=600, on_navigate=go_to_url)
 
 
-class StatusArghintsRenderer(RendererBase):
+class StatusRenderer(RendererBase):
   """Class that renders Tern messages in the status bar."""
 
   def __init__(self):
@@ -167,7 +166,7 @@ class StatusArghintsRenderer(RendererBase):
       sublime.status_message("")
 
 
-class PanelArghintsRenderer(RendererBase):
+class PanelRenderer(RendererBase):
   """Class that renders Tern messages in a panel."""
 
   def __init__(self):
@@ -184,10 +183,15 @@ class PanelArghintsRenderer(RendererBase):
       panel.run_command("tern_arghint", {"msg": ""})
 
 
-def create_arghints_renderer(arghints_type):
+def create_renderer(arghints_type):
+  """Create the correct renderer based on type.
+
+  Currently supported types are "tooltip", "status", and "panel".
+  """
+
   if arghints_type == "tooltip":
-    return TooltipArghintsRenderer()
+    return TooltipRenderer()
   elif arghints_type == "status":
-    return StatusArghintsRenderer()
+    return StatusRenderer()
   elif arghints_type == "panel":
-    return PanelArghintsRenderer()
+    return PanelRenderer()
