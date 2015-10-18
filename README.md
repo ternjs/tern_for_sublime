@@ -10,16 +10,16 @@ In JavaScript files, the package will handle autocompletion.
 
 The following keys will be bound (in JavaScript files):
 
-`alt+.`  
+`alt+.`
 Jump to the definition of the thing that the cursor is pointing at. If
 there is no known code location, but it has a documentation URL
 associated with, this will open the documentation in your browser
 instead.
 
-`alt+,`  
+`alt+,`
 Jump back to where you were when executing the previous `alt+.` command.
 
-`alt+space`  
+`alt+space`
 When on a variable, select all references to that variable in the
 current file.
 
@@ -49,7 +49,7 @@ You should be all set now.
 ## Configuration
 
 The plugin will load its settings from `Tern.sublime-settings` (found in Preferences > Package Settings > Tern),
-and recognized the following settings:
+and recognizes the following settings:
 
 `tern_argument_hints` (boolean, defaults to false)  
 Whether to show argument hints (May impact responsiveness on slow machines or big projects).
