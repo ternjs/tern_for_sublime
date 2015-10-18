@@ -277,6 +277,11 @@ def view_js_text(view):
   return text
 
 def run_command(view, query, pos=None, fragments=True, silent=False):
+  """Run the query on the Tern server.
+
+  See default queries at http://ternjs.net/doc/manual.html#protocol.
+  """
+
   pfile = get_pfile(view)
   if pfile is None or pfile.project.disabled: return
 
@@ -552,6 +557,16 @@ class TernSelectVariable(sublime_plugin.TextCommand):
         regions.append(sublime.Region(ref["start"], ref["end"]))
     self.view.sel().clear()
     for r in regions: self.view.sel().add(r)
+
+
+class TernDescribe(sublime_plugin.TextCommand):
+  def run(self, edit, **args):
+    data = run_command(self.view, {"type": "documentation"})
+    if data is None: return
+    renderer.render_description(get_pfile(self.view), self.view,
+                                data.get("type", None), data.get("doc", None),
+                                data.get("url", None))
+
 
 # fetch a certain setting from the package settings file and if it doesn't exist check the
 # Preferences.sublime-settings file for backwards compatibility.

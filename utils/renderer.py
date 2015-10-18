@@ -85,6 +85,13 @@ def get_html_message_from_ftype(ftype, argpos):
 
   return template.format(**template_data)
 
+
+def get_description_message(type=None, doc=None, url=None):
+  """Get the message to display for Describe commands."""
+
+  return type + ": " + doc
+
+
 def maybe(fn):
   def maybe_fn(arg):
     return fn(arg) if arg else ''
@@ -130,6 +137,13 @@ class RendererBase(object):
       message = get_html_message_from_ftype(ftype, argpos)
     else:
       message = get_message_from_ftype(ftype, argpos)
+    self._render_impl(pfile, view, message)
+    pfile.showing_arguments = True
+
+  def render_description(self, pfile, view, type=None, doc=None, url=None):
+    """Render symbol description."""
+
+    message = get_description_message(type, doc, url)
     self._render_impl(pfile, view, message)
     pfile.showing_arguments = True
 
