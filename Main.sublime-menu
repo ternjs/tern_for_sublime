@@ -19,6 +19,10 @@
                     {
                         "caption": "Select all references",
                         "command": "tern_select_variable"
+                    },
+                    {
+                        "caption": "Describe symbol",
+                        "command": "tern_describe"
                     }
                 ]
             }

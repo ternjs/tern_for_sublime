@@ -19,5 +19,12 @@
     "context": [
       {"key": "selector", "operand": "source.js"}
     ]
+  },
+  {
+    "keys": ["alt+o"], 
+    "command": "tern_describe",
+    "context": [
+      {"key": "selector", "operand": "source.js"}
+    ]
   }
 ]
