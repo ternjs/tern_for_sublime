@@ -1,6 +1,7 @@
 # encoding=utf8
 
 import abc
+import cgi
 import textwrap
 
 import sublime
@@ -86,10 +87,27 @@ def get_html_message_from_ftype(ftype, argpos):
   return template.format(**template_data)
 
 
-def get_description_message(type=None, doc=None, url=None):
-  """Get the message to display for Describe commands."""
+def get_description_message(useHTML, type, doc=None, url=None):
+  """Get the message to display for Describe commands.
 
-  return type + ": " + doc
+  If useHTML is True, the message will be formatted with HTML tags.
+  """
+
+  message = type
+  if useHTML:
+    message = "<strong>[{type}]</strong>".format(type=message)
+  if doc is not None:
+    if useHTML:
+      message += " — " + cgi.escape(doc)
+    else:
+      message += "\n\n" + textwrap.fill(doc, width=79)
+  if url is not None:
+    message += " "
+    if useHTML:
+      message += '<a href="{url}">[docs]</a>'.format(url=url)
+    else:
+      message += "\n\n" + url
+  return message
 
 
 def maybe(fn):
@@ -140,10 +158,10 @@ class RendererBase(object):
     self._render_impl(pfile, view, message)
     pfile.showing_arguments = True
 
-  def render_description(self, pfile, view, type=None, doc=None, url=None):
+  def render_description(self, pfile, view, type, doc=None, url=None):
     """Render symbol description."""
 
-    message = get_description_message(type, doc, url)
+    message = get_description_message(self.useHTML, type, doc, url)
     self._render_impl(pfile, view, message)
     pfile.showing_arguments = True
 

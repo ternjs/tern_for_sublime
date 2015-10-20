@@ -562,9 +562,10 @@ class TernSelectVariable(sublime_plugin.TextCommand):
 class TernDescribe(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     data = run_command(self.view, {"type": "documentation"})
-    if data is None: return
+    if data is None:
+      return
     renderer.render_description(get_pfile(self.view), self.view,
-                                data.get("type", None), data.get("doc", None),
+                                data["type"], data.get("doc", None),
                                 data.get("url", None))
 
 
