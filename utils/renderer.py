@@ -6,6 +6,13 @@ import textwrap
 
 import sublime
 
+
+def format_doc(doc):
+  """Format doc output for display in panel."""
+
+  return textwrap.fill(doc, width=79)
+
+
 def get_message_from_ftype(ftype, argpos):
   msg = ftype["name"] + "("
   i = 0
@@ -18,7 +25,7 @@ def get_message_from_ftype(ftype, argpos):
   if ftype["retval"] is not None:
     msg += " -> " + ftype["retval"]
   if ftype['doc'] is not None:
-    msg += "\n\n" + textwrap.fill(ftype['doc'], width=79)
+    msg += "\n\n" + format_doc(ftype['doc'])
   return msg
 
 def get_html_message_from_ftype(ftype, argpos):
@@ -100,7 +107,7 @@ def get_description_message(useHTML, type, doc=None, url=None):
     if useHTML:
       message += " — " + cgi.escape(doc)
     else:
-      message += "\n\n" + textwrap.fill(doc, width=79)
+      message += "\n\n" + format_doc(doc)
   if url is not None:
     message += " "
     if useHTML:
