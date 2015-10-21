@@ -102,7 +102,7 @@ def get_description_message(useHTML, type, doc=None, url=None):
 
   message = type
   if useHTML:
-    message = "<strong>[{type}]</strong>".format(type=message)
+    message = "<strong>{type}</strong>".format(type=message)
   if doc is not None:
     if useHTML:
       message += " — " + cgi.escape(doc)
