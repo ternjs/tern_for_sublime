@@ -155,6 +155,10 @@ class RendererBase(object):
     """
     pass
 
+  def _render_message(self, pfile, view, message):
+    self._render_impl(pfile, view, message)
+    pfile.showing_arguments = True
+
   def render_arghints(self, pfile, view, ftype, argpos):
     """Render argument hints."""
 
@@ -162,15 +166,13 @@ class RendererBase(object):
       message = get_html_message_from_ftype(ftype, argpos)
     else:
       message = get_message_from_ftype(ftype, argpos)
-    self._render_impl(pfile, view, message)
-    pfile.showing_arguments = True
+    self._render_message(pfile, view, message)
 
   def render_description(self, pfile, view, type, doc=None, url=None):
     """Render symbol description."""
 
     message = get_description_message(self.useHTML, type, doc, url)
-    self._render_impl(pfile, view, message)
-    pfile.showing_arguments = True
+    self._render_message(pfile, view, message)
 
   def clean(self, pfile, view):
     """Clean rendered content."""
