@@ -169,7 +169,7 @@ class RendererBase(object):
     self._render_message(pfile, view, message)
 
   def render_description(self, pfile, view, type, doc=None, url=None):
-    """Render symbol description."""
+    """Render description."""
 
     message = get_description_message(self.useHTML, type, doc, url)
     self._render_message(pfile, view, message)

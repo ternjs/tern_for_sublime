@@ -21,7 +21,7 @@
                         "command": "tern_select_variable"
                     },
                     {
-                        "caption": "Describe symbol",
+                        "caption": "Describe",
                         "command": "tern_describe"
                     }
                 ]

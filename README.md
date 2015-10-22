@@ -24,7 +24,7 @@ When on a variable, select all references to that variable in the
 current file.
 
 `alt+o`  
-When on a symbol, show documentation for the symbol. Documentation includes the type, a description (if available), and documentation url (if available).
+Show quick documentation for the thing that the cursor is pointing at. Documentation includes the type, a description (if available), and documentation url (if available).
 
 ## Installation
 
