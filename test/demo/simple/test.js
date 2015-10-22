@@ -2,7 +2,7 @@
 co
 document.body.a
 
-// Put the cursor in or after an expression, press ctrl-i to
+// Put the cursor in or after an expression, press alt-o to
 // find its type
 
 var foo = ["array", "of", "strings"]
@@ -16,7 +16,7 @@ CTor.prototype.hallo = "hallo"
 var baz = new CTor
 baz.
 
-// You can press ctrl-q when the cursor is on a variable
+// You can press alt-space when the cursor is on a variable
 // name to rename it. Try it with CTor...
 
 // When the cursor is in an argument list, the arguments
