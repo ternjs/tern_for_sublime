@@ -23,6 +23,9 @@ Jump back to where you were when executing the previous `alt+.` command.
 When on a variable, select all references to that variable in the
 current file.
 
+`alt+o`  
+When on a symbol, show documentation for the symbol. Documentation includes the type, a description (if available), and documentation url (if available).
+
 ## Installation
 
 Check out the code in this repository into a subdirectory of your
