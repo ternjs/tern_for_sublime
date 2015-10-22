@@ -1,8 +1,17 @@
 # encoding=utf8
 
+import abc
+import cgi
 import textwrap
 
 import sublime
+
+
+def format_doc(doc):
+  """Format doc output for display in panel."""
+
+  return textwrap.fill(doc, width=79)
+
 
 def get_message_from_ftype(ftype, argpos):
   msg = ftype["name"] + "("
@@ -16,7 +25,7 @@ def get_message_from_ftype(ftype, argpos):
   if ftype["retval"] is not None:
     msg += " -> " + ftype["retval"]
   if ftype['doc'] is not None:
-    msg += "\n\n" + textwrap.fill(ftype['doc'], width=79)
+    msg += "\n\n" + format_doc(ftype['doc'])
   return msg
 
 def get_html_message_from_ftype(ftype, argpos):
@@ -84,6 +93,30 @@ def get_html_message_from_ftype(ftype, argpos):
 
   return template.format(**template_data)
 
+
+def get_description_message(useHTML, type, doc=None, url=None):
+  """Get the message to display for Describe commands.
+
+  If useHTML is True, the message will be formatted with HTML tags.
+  """
+
+  message = type
+  if useHTML:
+    message = "<strong>{type}</strong>".format(type=message)
+  if doc is not None:
+    if useHTML:
+      message += " — " + cgi.escape(doc)
+    else:
+      message += "\n\n" + format_doc(doc)
+  if url is not None:
+    message += " "
+    if useHTML:
+      message += '<a href="{url}">[docs]</a>'.format(url=url)
+    else:
+      message += "\n\n" + url
+  return message
+
+
 def maybe(fn):
   def maybe_fn(arg):
     return fn(arg) if arg else ''
@@ -102,46 +135,103 @@ def go_to_url(url=None):
     import webbrowser
     webbrowser.open(url)
 
-class TooltipArghintsRenderer(object):
-  def render(self, pfile, view, ftype, argpos):
-    view.show_popup(get_html_message_from_ftype(ftype, argpos), sublime.COOPERATE_WITH_AUTO_COMPLETE, max_width=600, on_navigate=go_to_url)
+
+class RendererBase(object):
+  """Class that renders Tern messages."""
+
+  __metaclass__ = abc.ABCMeta
+
+  @abc.abstractmethod
+  def _render_impl(self, pfile, view, message):
+    """Render the message.
+
+    Implement this to define how subclasses render the message.
+    """
+
+  def _clean_impl(self, pfile, view):
+    """Clean rendered content.
+
+    Override this to define subclass-specific cleanup.
+    """
+    pass
+
+  def _render_message(self, pfile, view, message):
+    self._render_impl(pfile, view, message)
     pfile.showing_arguments = True
 
+  def render_arghints(self, pfile, view, ftype, argpos):
+    """Render argument hints."""
+
+    if self.useHTML:
+      message = get_html_message_from_ftype(ftype, argpos)
+    else:
+      message = get_message_from_ftype(ftype, argpos)
+    self._render_message(pfile, view, message)
+
+  def render_description(self, pfile, view, type, doc=None, url=None):
+    """Render description."""
+
+    message = get_description_message(self.useHTML, type, doc, url)
+    self._render_message(pfile, view, message)
+
   def clean(self, pfile, view):
+    """Clean rendered content."""
+
+    self._clean_impl(pfile, view)
     pfile.showing_arguments = False
 
 
-class StatusArghintsRenderer(object):
-  def render(self, pfile, view, ftype, argpos):
-    msg = get_message_from_ftype(ftype, argpos)
-    sublime.status_message(msg.split('\n')[0])
-    pfile.showing_arguments = True
+class TooltipRenderer(RendererBase):
+  """Class that renders Tern messages in a tooltip."""
 
-  def clean(self, pfile, view):
+  def __init__(self):
+    self.useHTML = True  # Used in RendererBase
+
+  def _render_impl(self, pfile, view, message):
+    view.show_popup(message, sublime.COOPERATE_WITH_AUTO_COMPLETE,
+                    max_width=600, on_navigate=go_to_url)
+
+
+class StatusRenderer(RendererBase):
+  """Class that renders Tern messages in the status bar."""
+
+  def __init__(self):
+    self.useHTML = False
+
+  def _render_impl(self, pfile, view, message):
+    sublime.status_message(message.split('\n')[0])
+
+  def _clean_impl(self, pfile, view):
     if pfile.showing_arguments:
       sublime.status_message("")
-      pfile.showing_arguments = False
 
 
-class PanelArghintsRenderer(object):
-  def render(self, pfile, view, ftype, argpos):
-    msg = get_message_from_ftype(ftype, argpos)
+class PanelRenderer(RendererBase):
+  """Class that renders Tern messages in a panel."""
+
+  def __init__(self):
+    self.useHTML = False
+
+  def _render_impl(self, pfile, view, message):
     panel = view.window().get_output_panel("tern_arghint")
-    panel.run_command("tern_arghint", {"msg": msg})
+    panel.run_command("tern_arghint", {"msg": message})
     view.window().run_command("show_panel", {"panel": "output.tern_arghint"})
-    pfile.showing_arguments = True
 
-  def clean(self, pfile, view):
+  def _clean_impl(self, pfile, view):
     if pfile.showing_arguments:
       panel = view.window().get_output_panel("tern_arghint")
       panel.run_command("tern_arghint", {"msg": ""})
-      pfile.showing_arguments = False
 
 
-def create_arghints_renderer(arghints_type):
+def create_renderer(arghints_type):
+  """Create the correct renderer based on type.
+
+  Currently supported types are "tooltip", "status", and "panel".
+  """
+
   if arghints_type == "tooltip":
-    return TooltipArghintsRenderer()
+    return TooltipRenderer()
   elif arghints_type == "status":
-    return StatusArghintsRenderer()
+    return StatusRenderer()
   elif arghints_type == "panel":
-    return PanelArghintsRenderer()
+    return PanelRenderer()
