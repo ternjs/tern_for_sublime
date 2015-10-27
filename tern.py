@@ -409,7 +409,7 @@ def ensure_completions_cached(pfile, view):
       if slice.startswith(c_word) and not re.match(".*\\W", slice):
         return (c_completions, False)
 
-  data = run_command(view, {"type": "completions", "types": True})
+  data = run_command(view, {"type": "completions", "types": True, "includeKeywords": True})
   if data is None: return (None, False)
 
   completions = []
