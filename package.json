@@ -6,7 +6,7 @@
   "description": "Sublime Text package for Tern",
   "repository": {
     "type": "git",
-    "url": "git://github.com/marijnh/tern_for_sublime.git"
+    "url": "git://github.com/ternjs/tern_for_sublime.git"
   },
   "dependencies": {
     "tern": ">=0.5"

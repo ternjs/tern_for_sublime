@@ -32,7 +32,7 @@ Check out the code in this repository into a subdirectory of your
 Sublime Text's `Packages` directory.
 
     cd /path/to/sublime-text-N/Packages
-    git clone git://github.com/marijnh/tern_for_sublime.git
+    git clone git://github.com/ternjs/tern_for_sublime.git
 
 Next, make sure [node.js][node] and [npm][npm] are installed (Tern is
 a JavaScript program), and install the depedencies of the package.
