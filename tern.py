@@ -588,13 +588,13 @@ def plugin_loaded():
   global arg_completion_enabled
   arghints_enabled = get_setting("tern_argument_hints", False)
   arg_completion_enabled = get_setting("tern_argument_completion", False)
-  if arghints_enabled:
-    if "show_popup" in dir(sublime.View):
-      default_arghints_type = "tooltip"
-    else:
-      default_arghints_type = "status"
-    arghints_type = get_setting("tern_argument_hints_type", default_arghints_type)
-    renderer = create_renderer(arghints_type)
+
+  if "show_popup" in dir(sublime.View):
+    default_output_style = "tooltip"
+  else:
+    default_output_style = "status"
+  output_style = get_setting("tern_output_style", get_setting("tern_argument_hints_type", default_output_style))
+  renderer = create_renderer(output_style)
   tern_arguments = get_setting("tern_arguments", [])
   if not isinstance(tern_arguments, list):
     tern_arguments = [tern_arguments]
