@@ -87,7 +87,7 @@ def get_html_message_from_ftype(ftype, argpos):
   template_data = {
     'style': style,
     'func_signature': hint_line(func_signature),
-    'doc_link': hint_line(link(ftype['url'])),
+    'doc_link': hint_line(link(ftype['url'], '[docs]')),
     'doc': hint_line(doc)
   }
 
@@ -118,17 +118,27 @@ def get_description_message(useHTML, type, doc=None, url=None):
 
 
 def maybe(fn):
-  def maybe_fn(arg):
-    return fn(arg) if arg else ''
+  def maybe_fn(arg, *args, **kwargs):
+    return fn(arg, *args, **kwargs) if arg else ''
   return maybe_fn
 
+
 @maybe
-def link(url):
-  return '<a href={url}>{url}</a>'.format(url=url)
+def link(url, linkText='{url}'):
+  """Returns a link HTML string.
+
+  The string is an &lt;a&gt; tag that links to the given url.
+  If linkText is not provided, the link text will be the url.
+  """
+
+  template = '<a href={url}>' + linkText + '</a>'
+  return template.format(url=url)
+
 
 @maybe
 def hint_line(txt):
   return '<div class="hint-line-content">{txt}</div>'.format(txt=txt)
+
 
 def go_to_url(url=None):
   if url:
