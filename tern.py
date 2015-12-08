@@ -417,17 +417,14 @@ def ensure_completions_cached(pfile, view):
   for rec in data["completions"]:
     rec_name = rec.get('name').replace('$', '\\$')
     rec_type = rec.get("type", None)
-    if completion_icon(rec_type) == " (fn)":
-      if arg_completion_enabled:
-        arguments = get_arguments(rec_type)
-        fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
-        completions.append((rec.get("name") + fn_completion_icon(arguments), fn_name))
+    if arg_completion_enabled and completion_icon(rec_type) == " (fn)":
+      arguments = get_arguments(rec_type)
+      fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
+      completions.append((rec.get("name") + fn_completion_icon(arguments), fn_name))
 
-        for i in range(len(arguments) - 1, -1, -1):
-          fn_name = rec_name + "(" + create_arg_str(arguments[0:i]) + ")"
-          completions_arity.append((rec.get("name") + fn_completion_icon(arguments[0:i]), fn_name))
-      else:
-        completions.append((rec.get("name") + completion_icon(rec_type), rec_name + "(${1})"))
+      for i in range(len(arguments) - 1, -1, -1):
+        fn_name = rec_name + "(" + create_arg_str(arguments[0:i]) + ")"
+        completions_arity.append((rec.get("name") + fn_completion_icon(arguments[0:i]), fn_name))
     else:
       completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
 
