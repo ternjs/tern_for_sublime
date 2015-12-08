@@ -1,5 +1,5 @@
 {
     "tern_argument_hints": false,
-    "tern_argument_hints_type": "tooltip",
+    "tern_output_style": "tooltip",
     "tern_argument_completion": false
 }
