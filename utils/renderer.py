@@ -5,7 +5,7 @@ import cgi
 import textwrap
 
 import sublime
-
+import tern_for_sublime.utils.plistparser as plistparser
 
 def format_doc(doc):
   """Format doc output for display in panel."""
@@ -28,35 +28,73 @@ def get_message_from_ftype(ftype, argpos):
     msg += "\n\n" + format_doc(ftype['doc'])
   return msg
 
+def get_theme_object(settings):
+  plist = plistparser.parse_string(sublime.load_resource(settings.get('color_scheme')));
+  return plist["settings"];
+
+def parse_theme_colors(currentTheme):
+
+  colors = ['hl', 'txt', 'lnk', 'bg', 'typ']
+  colors[3] = currentTheme[0]['settings']['background']
+  colors[1] = currentTheme[0]['settings']['foreground']
+  
+  for item in currentTheme:
+    if "scope" in item and "entity.name.function" in item["scope"]:
+      colors[0] = item["settings"]["foreground"]
+      continue;
+
+    elif "scope" in item and "string constant" in item["scope"]:
+      colors[2] = item["settings"]["foreground"]
+      continue;
+
+    elif "scope" in item and "variable.parameter" in item["scope"]:
+      colors[4] = item["settings"]["foreground"]
+      continue;
+
+  return colors;
+
 def get_html_message_from_ftype(ftype, argpos):
-  style = '''
+  tpl = '''
     <style>
-      .hint-popup {
+      body {{
+        margin:0;
+        padding:3px 10px 3px 10px;
+        background-color:{3};
+        color:{0};
+      }}
+      .hint-popup {{
         padding-top: 10px;
-        font-size: 14px;
-      }
-      .hint-line-content {
+        font-size: 14px;        
+      }}
+      .hint-line-content {{
         padding-bottom: 10px;
-      }
-      .func-arrow {
+      }}
+      .func-arrow {{
         font-size: 16px;
-      }
-      .arg-name {
-        color: #70a;
-      }
-      .current-arg {
+        color:{2};
+      }}
+      .arg-name {{
+        color:{4};
+      }}
+      .current-arg {{
         font-weight: bold;
         text-decoration: underline;
-      }
-      .doc {
+      }} 
+      .doc {{
         font-style: italic;
-      }
-      .type {
-        color: #07c;
-      }
+        color:{1};
+      }}
+      .type {{
+        color:{2};
+      }}
     </style>
   '''
 
+  #refactor this code to 1 single method
+  theme = get_theme_object(sublime.load_settings("Preferences.sublime-settings"))
+  colors = parse_theme_colors(theme)  
+  style = tpl.format(*colors)
+    
   func_signature = '<span class="func-name">{func_name}</span>('.format(func_name=ftype["name"])
   i = 0
   for name, type in ftype["args"]:
