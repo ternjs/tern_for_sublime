@@ -34,7 +34,7 @@ def get_theme_object(settings):
 
 def parse_theme_colors(currentTheme):
 
-  colors = ['hl', 'txt', 'lnk', 'bg', 'typ']
+  colors = ['hl', 'txt', 'lnk', 'bg', 'typ', 'key']
   colors[3] = currentTheme[0]['settings']['background']
   colors[1] = currentTheme[0]['settings']['foreground']
   
@@ -43,12 +43,18 @@ def parse_theme_colors(currentTheme):
       colors[0] = item["settings"]["foreground"]
       continue;
 
+    # should be "method color / function color" ???
     elif "scope" in item and "string constant" in item["scope"]:
       colors[2] = item["settings"]["foreground"]
       continue;
 
     elif "scope" in item and "variable.parameter" in item["scope"]:
       colors[4] = item["settings"]["foreground"]
+      continue;
+
+    #should be "returnvalue" ??? (used for links and return arrow)
+    elif "scope" in item and "keyword" in item["scope"]:
+      colors[5] = item["settings"]["foreground"]
       continue;
 
   return colors;
@@ -62,6 +68,10 @@ def get_html_message_from_ftype(ftype, argpos):
         background-color:{3};
         color:{0};
       }}
+      a {{
+        color:{5};
+        text-decoration:none;
+      }}
       .hint-popup {{
         padding-top: 10px;
         font-size: 14px;        
@@ -71,7 +81,7 @@ def get_html_message_from_ftype(ftype, argpos):
       }}
       .func-arrow {{
         font-size: 16px;
-        color:{2};
+        color:{5};
       }}
       .arg-name {{
         color:{4};
