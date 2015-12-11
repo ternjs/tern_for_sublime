@@ -28,17 +28,15 @@ def get_message_from_ftype(ftype, argpos):
     msg += "\n\n" + format_doc(ftype['doc'])
   return msg
 
-def get_theme_object(settings):
+def parse_stylesheet():
+  settings = sublime.load_settings("Preferences.sublime-settings")
   plist = plistparser.parse_string(sublime.load_resource(settings.get('color_scheme')));
-  return plist["settings"];
-
-def parse_theme_colors(currentTheme):
 
   colors = ['hl', 'txt', 'lnk', 'bg', 'typ', 'key']
-  colors[3] = currentTheme[0]['settings']['background']
-  colors[1] = currentTheme[0]['settings']['foreground']
+  colors[3] = plist["settings"][0]['settings']['background']
+  colors[1] = plist["settings"][0]['settings']['foreground']
   
-  for item in currentTheme:
+  for item in plist["settings"]:
     if "scope" in item and "entity.name.function" in item["scope"]:
       colors[0] = item["settings"]["foreground"]
       continue;
@@ -57,54 +55,53 @@ def parse_theme_colors(currentTheme):
       colors[5] = item["settings"]["foreground"]
       continue;
 
-  return colors;
+    tpl = '''
+      <style>
+        body {{
+          margin:0;
+          padding:3px 10px 3px 10px;
+          background-color:{3};
+          color:{0};
+        }}
+        a {{
+          color:{5};
+          text-decoration:none;
+        }}
+        .hint-popup {{
+          padding-top: 10px;
+          font-size: 14px;        
+        }}
+        .hint-line-content {{
+          padding-bottom: 10px;
+        }}
+        .func-arrow {{
+          font-size: 16px;
+          color:{5};
+        }}
+        .arg-name {{
+          color:{4};
+        }}
+        .current-arg {{
+          font-weight: bold;
+          text-decoration: underline;
+        }} 
+        .doc {{
+          font-style: italic;
+          color:{1};
+        }}
+        .type {{
+          color:{2};
+        }}
+      </style>
+    '''
+
+  return tpl.format(*colors)
+
+  
 
 def get_html_message_from_ftype(ftype, argpos):
-  tpl = '''
-    <style>
-      body {{
-        margin:0;
-        padding:3px 10px 3px 10px;
-        background-color:{3};
-        color:{0};
-      }}
-      a {{
-        color:{5};
-        text-decoration:none;
-      }}
-      .hint-popup {{
-        padding-top: 10px;
-        font-size: 14px;        
-      }}
-      .hint-line-content {{
-        padding-bottom: 10px;
-      }}
-      .func-arrow {{
-        font-size: 16px;
-        color:{5};
-      }}
-      .arg-name {{
-        color:{4};
-      }}
-      .current-arg {{
-        font-weight: bold;
-        text-decoration: underline;
-      }} 
-      .doc {{
-        font-style: italic;
-        color:{1};
-      }}
-      .type {{
-        color:{2};
-      }}
-    </style>
-  '''
-
-  #refactor this code to 1 single method
-  theme = get_theme_object(sublime.load_settings("Preferences.sublime-settings"))
-  colors = parse_theme_colors(theme)  
-  style = tpl.format(*colors)
-    
+ 
+  style = parse_stylesheet() 
   func_signature = '<span class="func-name">{func_name}</span>('.format(func_name=ftype["name"])
   i = 0
   for name, type in ftype["args"]:

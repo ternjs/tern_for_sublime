@@ -8,8 +8,8 @@ try:
 except:
   from .utils.renderer import create_renderer
 
-windows = platform.system() == "Windows"
-python3 = sys.version_info[0] > 2
+windows = platform.system() == "Windows" 
+python3 = sys.version_info[0] > 2 
 is_st2 = int(sublime.version()) < 3000 
  
 def is_js_file(view):
