@@ -12,7 +12,6 @@ def format_doc(doc):
 
   return textwrap.fill(doc, width=79)
 
-
 def get_message_from_ftype(ftype, argpos):
   msg = ftype["name"] + "("
   i = 0
@@ -29,6 +28,7 @@ def get_message_from_ftype(ftype, argpos):
   return msg
 
 def parse_stylesheet():
+  """Parsing stylesheets with user selected SyntaxTheme of sublime"""
   settings = sublime.load_settings("Preferences.sublime-settings")
   plist = plistparser.parse_string(sublime.load_resource(settings.get('color_scheme')));
 
@@ -96,12 +96,9 @@ def parse_stylesheet():
     '''
 
   return tpl.format(*colors)
-
   
-
 def get_html_message_from_ftype(ftype, argpos):
- 
-  style = parse_stylesheet() 
+   
   func_signature = '<span class="func-name">{func_name}</span>('.format(func_name=ftype["name"])
   i = 0
   for name, type in ftype["args"]:
@@ -283,6 +280,9 @@ def create_renderer(arghints_type):
 
   Currently supported types are "tooltip", "status", and "panel".
   """
+  
+  global style
+  style = parse_stylesheet()
 
   if arghints_type == "tooltip":
     return TooltipRenderer()
