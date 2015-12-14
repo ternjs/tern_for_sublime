@@ -102,7 +102,7 @@ def parse_stylesheet():
 
   return tpl.format(*colors)
   
-def get_html_message_from_ftype(ftype, argpos):
+def get_html_message_from_ftype(stylesheet, ftype, argpos):
    
   func_signature = '<span class="func-name">{func_name}</span>('.format(func_name=ftype["name"])
   i = 0
@@ -120,7 +120,7 @@ def get_html_message_from_ftype(ftype, argpos):
     func_signature += '<span class="func-arrow"> ➜ </span><span class="type">{type}</span>'.format(type=ftype["retval"])
 
   template = '''
-    {style}
+    {stylesheet}
     <div class="hint-popup">
       <div class="hint-line func-signature">{func_signature}</div>
       <div class="hint-line doc-link">{doc_link}</div>
@@ -132,7 +132,7 @@ def get_html_message_from_ftype(ftype, argpos):
   if doc: doc = doc.replace("\n", "<br>")
 
   template_data = {
-    'style': style,
+    'stylesheet': stylesheet,
     'func_signature': hint_line(func_signature),
     'doc_link': hint_line(link(ftype['url'], '[docs]')),
     'doc': hint_line(doc)
@@ -220,7 +220,7 @@ class RendererBase(object):
     """Render argument hints."""
 
     if self.useHTML:
-      message = get_html_message_from_ftype(ftype, argpos)
+      message = get_html_message_from_ftype(self.stylesheet, ftype, argpos)
     else:
       message = get_message_from_ftype(ftype, argpos)
     self._render_message(pfile, view, message)
@@ -243,6 +243,7 @@ class TooltipRenderer(RendererBase):
 
   def __init__(self):
     self.useHTML = True  # Used in RendererBase
+    self.stylesheet = parse_stylesheet() # Cache generated stylesheet
 
   def _render_impl(self, pfile, view, message):
     view.show_popup(message, sublime.COOPERATE_WITH_AUTO_COMPLETE,
@@ -285,9 +286,6 @@ def create_renderer(arghints_type):
 
   Currently supported types are "tooltip", "status", and "panel".
   """
-  
-  global style
-  style = parse_stylesheet()
 
   if arghints_type == "tooltip":
     return TooltipRenderer()
