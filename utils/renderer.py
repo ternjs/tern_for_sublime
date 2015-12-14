@@ -32,7 +32,9 @@ def parse_stylesheet():
   settings = sublime.load_settings("Preferences.sublime-settings")
   plist = plistparser.parse_string(sublime.load_resource(settings.get('color_scheme')));
 
-  colors = ['hl', 'txt', 'lnk', 'bg', 'typ', 'key']
+  default = ["#000", "#333", "#07c", "#fff", "#70a", "#70a"]
+  colors = [0,0,0,0,0,0]
+
   colors[3] = plist["settings"][0]['settings']['background']
   colors[1] = plist["settings"][0]['settings']['foreground']
   
@@ -42,7 +44,7 @@ def parse_stylesheet():
       continue;
 
     # should be "method color / function color" ???
-    elif "scope" in item and "string constant" in item["scope"]:
+    elif "scope" in item and "storage.type" in item["scope"]:
       colors[2] = item["settings"]["foreground"]
       continue;
 
@@ -55,45 +57,48 @@ def parse_stylesheet():
       colors[5] = item["settings"]["foreground"]
       continue;
 
-    tpl = '''
-      <style>
-        body {{
-          margin:0;
-          padding:3px 10px 3px 10px;
-          background-color:{3};
-          color:{0};
-        }}
-        a {{
-          color:{5};
-          text-decoration:none;
-        }}
-        .hint-popup {{
-          padding-top: 10px;
-          font-size: 14px;        
-        }}
-        .hint-line-content {{
-          padding-bottom: 10px;
-        }}
-        .func-arrow {{
-          font-size: 16px;
-          color:{5};
-        }}
-        .arg-name {{
-          color:{4};
-        }}
-        .current-arg {{
-          font-weight: bold;
-          text-decoration: underline;
-        }} 
-        .doc {{
-          font-style: italic;
-          color:{1};
-        }}
-        .type {{
-          color:{2};
-        }}
-      </style>
-    '''
+  tpl = '''
+    <style>
+      body {{
+        margin:0;
+        padding:3px 10px 3px 10px;
+        background-color:{3};
+        color:{0};
+      }}
+      a {{
+        color:{5};
+        text-decoration:none;
+      }}
+      .hint-popup {{
+        padding-top: 10px;
+        font-size: 14px;        
+      }}
+      .hint-line-content {{
+        padding-bottom: 10px;
+      }}
+      .func-arrow {{
+        font-size: 16px;
+        color:{5};
+      }}
+      .arg-name {{
+        color:{4};
+      }}
+      .current-arg {{
+        font-weight: bold;
+        text-decoration: underline;
+      }} 
+      .doc {{
+        font-style: italic;
+        color:{1};
+      }}
+      .type {{
+        color:{2};
+      }}
+    </style>
+  '''
+  
+  if 0 in colors:
+    return tpl.format(*default)      
 
   return tpl.format(*colors)
   
