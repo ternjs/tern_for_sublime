@@ -53,7 +53,9 @@ class Listeners(sublime_plugin.EventListener):
     on_selection_modified(view)
 
   def on_query_completions(self, view, prefix, _locations):
-    if view.score_selector(sel_start(view.sel()[0]), 'string.quoted, comment') > 0: return None
+    sel = sel_start(view.sel()[0])
+    if view.score_selector(sel, 'string.quoted') > 0: return None
+    if view.score_selector(sel, 'comment') > 0: return None
 
     pfile = get_pfile(view)
     if pfile is None: return None
