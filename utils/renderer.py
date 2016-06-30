@@ -37,7 +37,7 @@ def parse_stylesheet():
 
   colors[3] = plist["settings"][0]['settings']['background']
   colors[1] = plist["settings"][0]['settings']['foreground']
-  
+
   for item in plist["settings"]:
     if "scope" in item and "entity.name.function" in item["scope"]:
       colors[0] = item["settings"]["foreground"]
@@ -71,7 +71,7 @@ def parse_stylesheet():
       }}
       .hint-popup {{
         padding-top: 10px;
-        font-size: 14px;        
+        font-size: 14px;
       }}
       .hint-line-content {{
         padding-bottom: 10px;
@@ -86,7 +86,7 @@ def parse_stylesheet():
       .current-arg {{
         font-weight: bold;
         text-decoration: underline;
-      }} 
+      }}
       .doc {{
         font-style: italic;
         color:{1};
@@ -96,14 +96,14 @@ def parse_stylesheet():
       }}
     </style>
   '''
-  
+
   if 0 in colors:
-    return tpl.format(*default)      
+    return tpl.format(*default)
 
   return tpl.format(*colors)
-  
+
 def get_html_message_from_ftype(stylesheet, ftype, argpos):
-   
+
   func_signature = '<span class="func-name">{func_name}</span>('.format(func_name=ftype["name"])
   i = 0
   for name, type in ftype["args"]:
