@@ -13,7 +13,7 @@ python3 = sys.version_info[0] > 2
 is_st2 = int(sublime.version()) < 3000
 
 def is_js_file(view):
-  return view.score_selector(sel_end(view.sel()[0]), "source.js") > 0
+  return len(view.sel()) > 0 and view.score_selector(sel_end(view.sel()[0]), "source.js") > 0
 
 files = {}
 arghints_enabled = False
@@ -53,6 +53,7 @@ class Listeners(sublime_plugin.EventListener):
     on_selection_modified(view)
 
   def on_query_completions(self, view, prefix, _locations):
+    if len(view.sel()) == 0: return None
     sel = sel_start(view.sel()[0])
     if view.score_selector(sel, 'string.quoted') > 0: return None
     if view.score_selector(sel, 'comment') > 0: return None
@@ -135,9 +136,9 @@ def pfile_modified(pfile, view):
       sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
     else:
       sublime.set_timeout_async(lambda: maybe_save_pfile(pfile, view, now), 5000)
-  if pfile.cached_completions and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
+  if pfile.cached_completions and len(view.sel()) > 0 and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
     pfile.cached_completions = None
-  if pfile.cached_arguments and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
+  if pfile.cached_arguments and len(view.sel()) >0 and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
     pfile.cached_arguments = None
 
 def maybe_save_pfile(pfile, view, timestamp):
@@ -285,7 +286,7 @@ def run_command(view, query, pos=None, fragments=True, silent=False):
   """
 
   pfile = get_pfile(view)
-  if pfile is None or pfile.project.disabled: return
+  if pfile is None or pfile.project.disabled or len(view.sel()) == 0: return
 
   if isinstance(query, str): query = {"type": query}
   if (pos is None): pos = view.sel()[0].b
@@ -403,6 +404,7 @@ def get_arguments(type):
   return arg_list
 
 def ensure_completions_cached(pfile, view):
+  if len(view.sel()) == 0: return (None, False)
   pos = view.sel()[0].b
   if pfile.cached_completions is not None:
     c_start, c_word, c_completions = pfile.cached_completions
@@ -437,6 +439,7 @@ def ensure_completions_cached(pfile, view):
   return (completions, True)
 
 def locate_call(view):
+  if len(view.sel()) == 0: return (None, 0)
   sel = view.sel()[0]
   if sel.a != sel.b: return (None, 0)
   context = view.substr(sublime.Region(max(0, sel.b - 500), sel.b))
@@ -519,7 +522,7 @@ class TernJumpToDef(sublime_plugin.TextCommand):
     data = run_command(self.view, {"type": "definition", "lineCharPositions": True})
     if data is None: return
     file = data.get("file", None)
-    if file is not None:
+    if file is not None and len(view.sel()) > 0:
       # Found an actual definition
       row, col = self.view.rowcol(self.view.sel()[0].b)
       cur_pos = self.view.file_name() + ":" + str(row + 1) + ":" + str(col + 1)
