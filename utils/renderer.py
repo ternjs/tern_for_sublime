@@ -141,26 +141,36 @@ def get_html_message_from_ftype(stylesheet, ftype, argpos):
   return template.format(**template_data)
 
 
-def get_description_message(useHTML, type, doc=None, url=None):
+def get_description_message(useHTML, stylesheet, type, doc=None, url=None):
   """Get the message to display for Describe commands.
 
   If useHTML is True, the message will be formatted with HTML tags.
   """
 
-  message = type
   if useHTML:
-    message = "<strong>{type}</strong>".format(type=message)
-  if doc is not None:
-    if useHTML:
-      message += " — " + cgi.escape(doc)
-    else:
+    template = '''
+      {stylesheet}
+      <div class="hint-popup">
+        <div class="hint-line func-signature">{func_signature}</div>
+    '''
+    template_data = {
+      'stylesheet': stylesheet,
+      'func_signature': hint_line('<span class="type">{type}</span>'.format(type=type))
+    }
+    if doc is not None:
+      template += '\n  <div class="hint-line doc">{doc}</div>'
+      template_data['doc'] = hint_line(doc)
+    if url is not None:
+      template += '\n  <div class="hint-line doc-link">{doc_link}</div>'
+      template_data['doc_link'] = hint_line(link(url, '[docs]'))
+    template += '\n</div>'
+    message = template.format(**template_data)
+  else:
+    message = type
+    if doc is not None:
       message += "\n\n" + format_doc(doc)
-  if url is not None:
-    message += " "
-    if useHTML:
-      message += '<a href="{url}">[docs]</a>'.format(url=url)
-    else:
-      message += "\n\n" + url
+    if url is not None:
+      message += " \n\n" + url
   return message
 
 
@@ -228,7 +238,7 @@ class RendererBase(object):
   def render_description(self, pfile, view, type, doc=None, url=None):
     """Render description."""
 
-    message = get_description_message(self.useHTML, type, doc, url)
+    message = get_description_message(self.useHTML, self.stylesheet, type, doc, url)
     self._render_message(pfile, view, message)
 
   def clean(self, pfile, view):
