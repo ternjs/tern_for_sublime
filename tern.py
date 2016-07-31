@@ -548,7 +548,7 @@ class TernSelectVariable(sublime_plugin.TextCommand):
     shown_error = False
     regions = []
     for ref in data["refs"]:
-      if ref["file"] != file:
+      if ref["file"].replace('\\','/') != file.replace('\\','/'):
         if not shown_error:
           sublime.error_message("Not all uses of this variable are file-local. Selecting only local ones.")
           shown_error = True
