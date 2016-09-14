@@ -627,7 +627,7 @@ def plugin_loaded():
             msg += " Error message was:\n\n" + e.output
           sublime.error_message(msg)
           return
-    tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern"), "--no-port-file"]
+    tern_command = [get_setting("node_path", "node"),  os.path.join(plugin_dir, "node_modules/tern/bin/tern"), "--no-port-file"]
 
 def cleanup():
   for f in files.values():

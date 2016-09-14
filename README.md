@@ -54,6 +54,9 @@ You should be all set now.
 The plugin will load its settings from `Tern.sublime-settings` (found in Preferences > Package Settings > Tern),
 and recognized the following settings:
 
+`node_path` (string, defaults to "node")  
+Provide the executable node binary file as you wanted to be used by TernJS. The node in *PATH*, environment variable, as default.
+
 `tern_argument_hints` (boolean, defaults to false)  
 Whether to show argument hints (May impact responsiveness on slow machines or big projects).
 
