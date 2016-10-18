@@ -1,5 +1,8 @@
 {
     "tern_argument_hints": false,
     "tern_output_style": "tooltip",
-    "tern_argument_completion": false
+    "tern_argument_completion": false,
+    // Used to get auto completion for unsaved buffers
+    // By default, this folder is inside Packages/tern_for_sublime/
+    "tern_default_project_dir": "default_project_dir"
 }
