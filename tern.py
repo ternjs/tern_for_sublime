@@ -94,7 +94,7 @@ def get_pfile(view):
   if not is_js_file(view): return None
   fname = view.file_name()
   if fname is None:
-    fname = os.path.join(os.path.dirname(__file__), get_setting("tern_default_project_dir", "default_project_dir"), "tmp")
+    fname = os.path.join(os.path.dirname(__file__), get_setting("tern_default_project_dir", "default_project_dir"), str(time.time()))
   if fname in files:
     pfile = files[fname]
     if pfile.project.disabled: return None
