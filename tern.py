@@ -2,6 +2,7 @@
 
 import sublime, sublime_plugin
 import os, sys, platform, subprocess, webbrowser, json, re, time, atexit
+from subprocess import CalledProcessError
 try:
   # python 2
   from utils.renderer import create_renderer
@@ -608,13 +609,15 @@ def plugin_loaded():
           "Yes, install."):
         try:
           if hasattr(subprocess, "check_output"):
-            subprocess.check_output(["npm", "install"], cwd=plugin_dir)
+            subprocess.check_output(["npm", "--loglevel=silent", "install"], cwd=plugin_dir, shell=windows)
           else:
-            subprocess.check_call(["npm", "install"], cwd=plugin_dir)
-        except (IOError, OSError) as e:
+            subprocess.check_call(["npm", "--loglevel=silent", "install"], cwd=plugin_dir, shell=windows)
+        except (IOError, OSError, CalledProcessError) as e:
           msg = "Installation failed. Try doing 'npm install' manually in " + plugin_dir + "."
-          if hasattr(e, "output"):
-            msg += " Error message was:\n\n" + e.output
+          if hasattr(e, "output") and e.output is not None:
+            msg += "\nError message was:\n\n" + e.output
+          if hasattr(e, "returncode"):
+            msg += "\nReturn code was: " + str(e.returncode)
           sublime.error_message(msg)
           return
     tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern"), "--no-port-file"]
