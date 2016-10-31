@@ -65,7 +65,7 @@
                                 "caption": "Key Bindings – Default",
                                 "command": "open_file", "args":
                                 {
-                                    "file": "${packages}/tern_for_sublime/Tern.sublime-keymap"
+                                    "file": "${packages}/tern_for_sublime/Default.sublime-keymap"
                                 }
                             },
                             {
