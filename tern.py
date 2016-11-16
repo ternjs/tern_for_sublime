@@ -569,6 +569,15 @@ class TernDescribe(sublime_plugin.TextCommand):
                                 data["type"], data.get("doc", None),
                                 data.get("url", None))
 
+class TernDisableProject(sublime_plugin.TextCommand):
+  def run(self, edit, **args):
+    pfile = get_pfile(view)
+    pfile.project.disabled = True
+
+class TernEnableProject(sublime_plugin.TextCommand):
+  def run(self, edit, **args):
+    pfile = get_pfile(view)
+    pfile.project.disabled = True
 
 # fetch a certain setting from the package settings file and if it doesn't exist check the
 # Preferences.sublime-settings file for backwards compatibility.

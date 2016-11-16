@@ -23,6 +23,14 @@
                     {
                         "caption": "Describe",
                         "command": "tern_describe"
+                    },
+                    {
+                        "caption": "Enable Project",
+                        "command": "tern_enable_project"
+                    },
+                    {
+                        "caption": "Disable Project",
+                        "command": "tern_disable_project"
                     }
                 ]
             }
