@@ -572,7 +572,7 @@ class TernDescribe(sublime_plugin.TextCommand):
 class TernDisableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     pfile = get_pfile(view)
-    pfile.project.disabled = True
+    pfile.project.disabled = False
 
 class TernEnableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
