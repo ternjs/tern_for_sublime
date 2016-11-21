@@ -264,7 +264,9 @@ def make_request_py3():
       req = opener.open("http://" + localhost + ":" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
       return json.loads(req.read().decode("utf-8"))
     except urllib.error.URLError as error:
-      raise Req_Error((hasattr(error, "read") and error.read().decode("utf-8")) or error.reason)
+      # error on mac
+      # raise Req_Error((hasattr(error, "read") and error.read().decode("utf-8")) or error.reason)
+      raise Req_Error(error.read().decode("utf-8"))
   return f
 
 if python3:
@@ -354,16 +356,21 @@ def report_error(message, project):
     project.disabled = True
 
 def completion_icon(type):
-  if type is None or type == "?": return " (?)"
-  if type.startswith("fn("): return " (fn)"
-  if type.startswith("["): return " ([])"
-  if type == "number": return " (num)"
-  if type == "string": return " (str)"
-  if type == "bool": return " (bool)"
-  return " (obj)"
+  if type is None or type == "?": return "\t? "
+  if type.startswith("fn("): return "\tfn "
+  if type.startswith("["): return "\t[] "
+  if type == "number": return "\tnum "
+  if type == "string": return "\tstr "
+  if type == "bool": return "\tbool "
+  return "\t{} "
 
-def fn_completion_icon(arguments):
-  return " (fn/"+str(len(arguments))+")"
+def fn_completion_icon(arguments, retval):
+  # return " (fn/"+str(len(arguments))+")"
+  ret = ""
+  if retval is not None:
+    ret = retval
+
+  return "(" + ", ".join(arguments) + ")" + ret + ("\tfn ")
 
 # create auto complete string from list arguments
 def create_arg_str(arguments):
@@ -421,14 +428,22 @@ def ensure_completions_cached(pfile, view):
   for rec in data["completions"]:
     rec_name = rec.get('name').replace('$', '\\$')
     rec_type = rec.get("type", None)
-    if arg_completion_enabled and completion_icon(rec_type) == " (fn)":
+    if arg_completion_enabled and rec_type is not None and rec_type.startswith("fn("):
+      retval = parse_function_type(rec).get('retval')
+
+      if retval is None or retval == "()":
+        retval = ""
+      elif retval.startswith("{"):
+        retval = "{}"
+      elif retval.startswith("["):
+        retval = "[]"
+
+      if retval != "":
+        retval = " -> " + retval
+
       arguments = get_arguments(rec_type)
       fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
-      completions.append((rec.get("name") + fn_completion_icon(arguments), fn_name))
-
-      for i in range(len(arguments) - 1, -1, -1):
-        fn_name = rec_name + "(" + create_arg_str(arguments[0:i]) + ")"
-        completions_arity.append((rec.get("name") + fn_completion_icon(arguments[0:i]), fn_name))
+      completions.append((rec.get("name") + fn_completion_icon(arguments, retval), fn_name))
     else:
       completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
 
