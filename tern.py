@@ -264,7 +264,9 @@ def make_request_py3():
       req = opener.open("http://" + localhost + ":" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
       return json.loads(req.read().decode("utf-8"))
     except urllib.error.URLError as error:
-      raise Req_Error((hasattr(error, "read") and error.read().decode("utf-8")) or error.reason)
+      # error on mac
+      # raise Req_Error((hasattr(error, "read") and error.read().decode("utf-8")) or error.reason)
+      raise Req_Error(error.read().decode("utf-8"))
   return f
 
 if python3:
