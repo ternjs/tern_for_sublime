@@ -54,6 +54,7 @@ class Listeners(sublime_plugin.EventListener):
     on_selection_modified(view)
 
   def on_query_completions(self, view, prefix, _locations):
+    if len(view.sel()) == 0: return None
     sel = sel_start(view.sel()[0])
     if view.score_selector(sel, 'string.quoted') > 0: return None
     if view.score_selector(sel, 'comment') > 0: return None
@@ -137,9 +138,9 @@ def pfile_modified(pfile, view):
       sublime.set_timeout(lambda: maybe_save_pfile(pfile, view, now), 5000)
     else:
       sublime.set_timeout_async(lambda: maybe_save_pfile(pfile, view, now), 5000)
-  if pfile.cached_completions and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
+  if pfile.cached_completions and len(view.sel()) > 0 and sel_start(view.sel()[0]) < pfile.cached_completions[0]:
     pfile.cached_completions = None
-  if pfile.cached_arguments and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
+  if pfile.cached_arguments and len(view.sel()) >0 and sel_start(view.sel()[0]) < pfile.cached_arguments[0]:
     pfile.cached_arguments = None
 
 def maybe_save_pfile(pfile, view, timestamp):
@@ -171,8 +172,8 @@ def start_server(project):
   if platform.system() == "Darwin":
     env = os.environ.copy()
     env["PATH"] += ":/usr/local/bin"
-  proc = subprocess.Popen(tern_command + tern_arguments, cwd=project.dir, env=env,
-                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+  proc = subprocess.Popen(tern_command + " ".join(tern_arguments), cwd=project.dir,
+                          env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, shell=windows)
   output = ""
 
@@ -290,7 +291,7 @@ def run_command(view, query, pos=None, fragments=True, silent=False):
   """
 
   pfile = get_pfile(view)
-  if pfile is None or pfile.project.disabled: return
+  if pfile is None or pfile.project.disabled or len(view.sel()) == 0: return
 
   if isinstance(query, str): query = {"type": query}
   if (pos is None): pos = view.sel()[0].b
@@ -413,6 +414,7 @@ def get_arguments(type):
   return arg_list
 
 def ensure_completions_cached(pfile, view):
+  if len(view.sel()) == 0: return (None, False)
   pos = view.sel()[0].b
   if pfile.cached_completions is not None:
     c_start, c_word, c_completions = pfile.cached_completions
@@ -455,6 +457,7 @@ def ensure_completions_cached(pfile, view):
   return (completions, True)
 
 def locate_call(view):
+  if len(view.sel()) == 0: return (None, 0)
   sel = view.sel()[0]
   if sel.a != sel.b: return (None, 0)
   context = view.substr(sublime.Region(max(0, sel.b - 500), sel.b))
@@ -537,7 +540,7 @@ class TernJumpToDef(sublime_plugin.TextCommand):
     data = run_command(self.view, {"type": "definition", "lineCharPositions": True})
     if data is None: return
     file = data.get("file", None)
-    if file is not None:
+    if file is not None and len(view.sel()) > 0:
       # Found an actual definition
       row, col = self.view.rowcol(self.view.sel()[0].b)
       cur_pos = self.view.file_name() + ":" + str(row + 1) + ":" + str(col + 1)
@@ -578,12 +581,20 @@ class TernSelectVariable(sublime_plugin.TextCommand):
 
 class TernDescribe(sublime_plugin.TextCommand):
   def run(self, edit, **args):
-    data = run_command(self.view, {"type": "documentation"})
+    view = self.view
+    pfile = get_pfile(view)
+    data = run_command(view, {"type": "documentation"})
     if data is None:
       return
-    renderer.render_description(get_pfile(self.view), self.view,
-                                data["type"], data.get("doc", None),
-                                data.get("url", None))
+    parsed = parse_function_type(data)
+    if parsed is not None:
+      parsed['url'] = data.get('url', None)
+      parsed['doc'] = data.get('doc', None)
+      render_argument_hints(pfile, view, parsed, None)
+    else:
+      renderer.render_description(pfile, view,
+                                  data["type"], data.get("doc", None),
+                                  data.get("url", None))
 
 class TernDisableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
@@ -645,7 +656,7 @@ def plugin_loaded():
             msg += "\nReturn code was: " + str(e.returncode)
           sublime.error_message(msg)
           return
-    tern_command = ["node",  os.path.join(plugin_dir, "node_modules/tern/bin/tern"), "--no-port-file"]
+    tern_command = [get_setting("node_path", "node"),  os.path.join(plugin_dir, "node_modules/tern/bin/tern"), "--no-port-file"]
 
 def cleanup():
   for f in files.values():
