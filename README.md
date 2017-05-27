@@ -90,6 +90,9 @@ plugins for a project. See the [Tern docs][docs] for details.
 
 [docs]: http://ternjs.net/doc/manual.html#configuration
 
+`tern_inhibit_word_completions` (boolean, default to false)
+If true, Prevents Sublime Text from adding its word completions to the completion list after all plugins have been processed. This consists of any word in the current document that is longer than 3 characters.
+
 ### Automatically Showing Completions
 
 Add `{"selector": "source.js", "characters": "."}` to your
