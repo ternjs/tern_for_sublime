@@ -168,16 +168,17 @@ def server_port(project, ignored=None):
   return (started, False)
 
 def start_server(project):
+  global tern_command
   if not tern_command: return None
   if time.time() - project.last_failed < 30: return None
   env = None
   if platform.system() == "Darwin":
     env = os.environ.copy()
     env["PATH"] += ":/usr/local/bin"
-  
+
   if not isinstance(tern_command, list):
     tern_command = [tern_command]
-    
+
   proc = subprocess.Popen(tern_command + tern_arguments, cwd=project.dir, env=env,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, shell=windows)
