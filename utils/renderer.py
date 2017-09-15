@@ -42,7 +42,7 @@ def get_html_message_from_ftype(ftype, argpos):
         font-size: 16px;
       }
       .arg-name {
-        color: #70a;
+        color: var(--purplish);
       }
       .current-arg {
         font-weight: bold;
@@ -52,7 +52,7 @@ def get_html_message_from_ftype(ftype, argpos):
         font-style: italic;
       }
       .type {
-        color: #07c;
+        color: var(--bluish);
       }
     </style>
   '''
