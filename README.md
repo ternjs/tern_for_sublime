@@ -6,6 +6,10 @@ This is a [Sublime Text][st] (version 2 and 3) package that provides
 [st]: http://www.sublimetext.com/
 [tern]: http://ternjs.net
 
+**NOTE**: This project is not being actively maintained right now. If
+you'd be interested in becoming a maintainer, write me or open an
+issue.
+
 In JavaScript files, the package will handle autocompletion.
 
 The following keys will be bound (in JavaScript files):
