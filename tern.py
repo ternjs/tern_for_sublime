@@ -54,6 +54,25 @@ class Listeners(sublime_plugin.EventListener):
     on_selection_modified(view)
 
   def on_query_completions(self, view, prefix, _locations):
+    QUOTES = ("\"", "'")
+
+    loc = _locations[0]
+    prevCh = view.substr(loc - len(prefix) - 1)
+    nextCh = view.substr(loc)
+    prevQuote = prevCh in QUOTES and prevCh
+    nextQuote = nextCh in QUOTES and nextCh == prevQuote and nextCh
+
+    def postfix(c):
+      (display, word) = c
+      if prevQuote and c[1][0:1] in QUOTES:
+        word = word[1:]
+        display = display[1:]
+      if nextQuote and c[1][-1] in QUOTES:
+        word = word[0:-1]
+        display = display.replace("%s%s" % (word, nextQuote), word, 1)
+
+      return (display, word)
+
     sel = sel_start(view.sel()[0])
     if view.score_selector(sel, 'comment') > 0: return None
 
@@ -65,6 +84,8 @@ class Listeners(sublime_plugin.EventListener):
 
     if not fresh:
       completions = [c for c in completions if c[1].startswith(prefix)]
+
+    completions = [postfix(c) for c in completions]
 
     flags = 0;
     if get_setting("tern_inhibit_word_completions", False):
