@@ -62,14 +62,35 @@ class Listeners(sublime_plugin.EventListener):
     prevQuote = prevCh in QUOTES and prevCh
     nextQuote = nextCh in QUOTES and nextCh == prevQuote and nextCh
 
-    def postfix(c):
+    lineBeforePos = view.substr(sublime.Region(view.line(loc).begin(), loc))
+    pathPrefix = lineBeforePos.rsplit(' ', 1)[0]
+
+    pathFirstCh = pathPrefix[0]
+    pathFirstQuote = pathFirstCh in QUOTES and pathFirstCh
+    pathLastQuote = nextCh in QUOTES and nextCh == pathFirstQuote and nextCh
+
+    def postfixQuotes(c):
       (display, word) = c
       if prevQuote and c[1][0:1] in QUOTES:
         word = word[1:]
         display = display[1:]
-      if nextQuote and c[1][-1] in QUOTES:
-        word = word[0:-1]
-        display = display.replace("%s%s" % (word, nextQuote), word, 1)
+  
+        if nextQuote and c[1][-1] in QUOTES:
+          word = word[0:-1]
+          display = display.replace("%s%s" % (word, nextQuote), word, 1)
+
+      return (display, word)
+
+    def postfixPathes(c):
+      (display, word) = c
+
+      if word.startswith(pathPrefix):
+        word = prefix + word[len(pathPrefix):]
+        display = prefix + display[len(pathPrefix):]
+  
+        if pathLastQuote and c[1][-1] in QUOTES:
+          word = word[0:-1]
+          display = display.replace("%s%s" % (word, pathLastQuote), word, 1)
 
       return (display, word)
 
@@ -85,7 +106,8 @@ class Listeners(sublime_plugin.EventListener):
     if not fresh:
       completions = [c for c in completions if c[1].startswith(prefix)]
 
-    completions = [postfix(c) for c in completions]
+    completions = [postfixQuotes(c) for c in completions]
+    completions = [postfixPathes(c) for c in completions]
 
     flags = 0;
     if get_setting("tern_inhibit_word_completions", False):
