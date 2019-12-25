@@ -646,6 +646,15 @@ class TernEnableProject(sublime_plugin.TextCommand):
     pfile = get_pfile(self.view)
     pfile.project.disabled = True
 
+class TernShowArgHints(sublime_plugin.WindowCommand):
+  def run(self, **args):
+    view = self.window.active_view()
+    if not view:
+      return
+    pfile = get_pfile(view)
+    if pfile is not None:
+      show_argument_hints(pfile, view)
+
 # fetch a certain setting from the package settings file and if it doesn't exist check the
 # Preferences.sublime-settings file for backwards compatibility.
 def get_setting(key, default):

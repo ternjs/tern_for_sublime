@@ -22,5 +22,9 @@
   {
     "caption": "tern_for_sublime: Disable Project",
     "command": "tern_disable_project"
+  },
+  {
+    "caption": "tern_for_sublime: Show Argument Hints",
+    "command": "tern_show_arg_hints"
   }
 ]
