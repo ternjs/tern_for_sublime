@@ -410,13 +410,13 @@ def report_error(message, project):
     project.disabled = True
 
 def completion_icon(type):
-  if type is None or type == "?": return "? "
-  if type.startswith("fn("): return "fn "
-  if type.startswith("["): return "[] "
-  if type == "number": return "num "
-  if type == "string": return "str "
-  if type == "bool": return "bool "
-  return "{} "
+  if type is None or type == "?": return "?"
+  if type.startswith("fn("): return "fn"
+  if type.startswith("["): return "[]"
+  if type == "number": return "num"
+  if type == "string": return "str"
+  if type == "bool": return "bool"
+  return "{}"
 
 def fn_completion_icon(arguments, retval):
   # return " (fn/"+str(len(arguments))+")"
