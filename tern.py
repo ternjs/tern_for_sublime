@@ -406,8 +406,9 @@ def send_buffer(pfile, view):
     return False
 
 def report_error(message, project):
-  if sublime.ok_cancel_dialog(message, "Disable Tern"):
-    project.disabled = True
+  if message != "timed out":
+    if sublime.ok_cancel_dialog(message, "Disable Tern"):
+      project.disabled = True
 
 def completion_icon(type):
   if type is None or type == "?": return "?"
