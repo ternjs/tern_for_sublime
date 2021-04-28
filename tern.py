@@ -12,6 +12,7 @@ except:
 windows = platform.system() == "Windows"
 python3 = sys.version_info[0] > 2
 is_st2 = int(sublime.version()) < 3000
+is_st4 = int(sublime.version()) > 4000
 
 def is_js_file(view):
   return len(view.sel()) > 0 and view.score_selector(sel_end(view.sel()[0]), "source.js") > 0
@@ -103,11 +104,12 @@ class Listeners(sublime_plugin.EventListener):
     completions, fresh = ensure_completions_cached(pfile, view)
     if completions is None: return None
 
-    if not fresh:
-      completions = [c for c in completions if c[1].startswith(prefix)]
+    if not is_st4:
+      if not fresh:
+        completions = [c for c in completions if c[1].startswith(prefix)]
 
-    completions = [postfixQuotes(c) for c in completions]
-    completions = [postfixPathes(c) for c in completions]
+      completions = [postfixQuotes(c) for c in completions]
+      completions = [postfixPathes(c) for c in completions]
 
     flags = 0;
     if get_setting("tern_inhibit_word_completions", False):
@@ -408,13 +410,13 @@ def report_error(message, project):
     project.disabled = True
 
 def completion_icon(type):
-  if type is None or type == "?": return "\t? "
-  if type.startswith("fn("): return "\tfn "
-  if type.startswith("["): return "\t[] "
-  if type == "number": return "\tnum "
-  if type == "string": return "\tstr "
-  if type == "bool": return "\tbool "
-  return "\t{} "
+  if type is None or type == "?": return "? "
+  if type.startswith("fn("): return "fn "
+  if type.startswith("["): return "[] "
+  if type == "number": return "num "
+  if type == "string": return "str "
+  if type == "bool": return "bool "
+  return "{} "
 
 def fn_completion_icon(arguments, retval):
   # return " (fn/"+str(len(arguments))+")"
@@ -422,7 +424,12 @@ def fn_completion_icon(arguments, retval):
   if retval is not None:
     ret = retval
 
-  return "(" + ", ".join(arguments) + ")" + ret + ("\tfn ")
+  if is_st4:
+    tail = ""
+  else:
+    tail = "\tfn "
+
+  return "(" + ", ".join(arguments) + ")" + ret + tail
 
 # create auto complete string from list arguments
 def create_arg_str(arguments):
@@ -495,9 +502,26 @@ def ensure_completions_cached(pfile, view):
 
       arguments = get_arguments(rec_type)
       fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
-      completions.append((rec.get("name") + fn_completion_icon(arguments, retval), fn_name))
+      if not is_st4:
+        completions.append((rec.get("name") + fn_completion_icon(arguments, retval), fn_name))
+      else:
+        completions.append(sublime.CompletionItem(
+          (rec.get("name") + fn_completion_icon(arguments, retval)),
+          annotation='fn',
+          completion=fn_name,
+          completion_format=sublime.COMPLETION_FORMAT_SNIPPET,
+          kind=sublime.KIND_FUNCTION
+        ))
     else:
-      completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
+      if not is_st4:
+        completions.append((rec.get("name") + "\t" + completion_icon(rec_type), rec_name))
+      else:
+        completions.append(sublime.CompletionItem(
+          rec.get("name"),
+          annotation=completion_icon(rec_type),
+          completion=rec_name,
+          kind=sublime.KIND_VARIABLE
+        ))
 
   # put the auto completions of functions with lower arity at the bottom of the autocomplete list
   # so they don't clog up the autocompeltions at the top of the list
