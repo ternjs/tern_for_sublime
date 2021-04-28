@@ -54,8 +54,47 @@ class Listeners(sublime_plugin.EventListener):
     on_selection_modified(view)
 
   def on_query_completions(self, view, prefix, _locations):
+    QUOTES = ("\"", "'")
+
+    loc = _locations[0]
+    prevCh = view.substr(loc - len(prefix) - 1)
+    nextCh = view.substr(loc)
+    prevQuote = prevCh in QUOTES and prevCh
+    nextQuote = nextCh in QUOTES and nextCh == prevQuote and nextCh
+
+    lineBeforePos = view.substr(sublime.Region(view.line(loc).begin(), loc))
+    pathPrefix = lineBeforePos.rsplit(' ', 1)[0]
+
+    pathFirstCh = pathPrefix[0]
+    pathFirstQuote = pathFirstCh in QUOTES and pathFirstCh
+    pathLastQuote = nextCh in QUOTES and nextCh == pathFirstQuote and nextCh
+
+    def postfixQuotes(c):
+      (display, word) = c
+      if prevQuote and c[1][0:1] in QUOTES:
+        word = word[1:]
+        display = display[1:]
+  
+        if nextQuote and c[1][-1] in QUOTES:
+          word = word[0:-1]
+          display = display.replace("%s%s" % (word, nextQuote), word, 1)
+
+      return (display, word)
+
+    def postfixPathes(c):
+      (display, word) = c
+
+      if word.startswith(pathPrefix):
+        word = prefix + word[len(pathPrefix):]
+        display = prefix + display[len(pathPrefix):]
+  
+        if pathLastQuote and c[1][-1] in QUOTES:
+          word = word[0:-1]
+          display = display.replace("%s%s" % (word, pathLastQuote), word, 1)
+
+      return (display, word)
+
     sel = sel_start(view.sel()[0])
-    if view.score_selector(sel, 'string.quoted') > 0: return None
     if view.score_selector(sel, 'comment') > 0: return None
 
     pfile = get_pfile(view)
@@ -66,8 +105,15 @@ class Listeners(sublime_plugin.EventListener):
 
     if not fresh:
       completions = [c for c in completions if c[1].startswith(prefix)]
-    return completions
 
+    completions = [postfixQuotes(c) for c in completions]
+    completions = [postfixPathes(c) for c in completions]
+
+    flags = 0;
+    if get_setting("tern_inhibit_word_completions", False):
+      flags |= sublime.INHIBIT_WORD_COMPLETIONS
+
+    return (completions, flags)
 
 class ProjectFile(object):
   def __init__(self, name, view, project):
@@ -165,12 +211,17 @@ def server_port(project, ignored=None):
   return (started, False)
 
 def start_server(project):
+  global tern_command
   if not tern_command: return None
   if time.time() - project.last_failed < 30: return None
   env = None
   if platform.system() == "Darwin":
     env = os.environ.copy()
     env["PATH"] += ":/usr/local/bin"
+
+  if not isinstance(tern_command, list):
+    tern_command = [tern_command]
+
   proc = subprocess.Popen(tern_command + tern_arguments, cwd=project.dir, env=env,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, shell=windows)
@@ -264,7 +315,10 @@ def make_request_py3():
       req = opener.open("http://" + localhost + ":" + str(port) + "/", json.dumps(doc).encode("utf-8"), 1)
       return json.loads(req.read().decode("utf-8"))
     except urllib.error.URLError as error:
-      raise Req_Error((hasattr(error, "read") and error.read().decode("utf-8")) or error.reason)
+      if hasattr(error, "read"):
+        raise Req_Error(error.read().decode("utf-8"))
+      else:
+        raise error
   return f
 
 if python3:
@@ -354,16 +408,21 @@ def report_error(message, project):
     project.disabled = True
 
 def completion_icon(type):
-  if type is None or type == "?": return " (?)"
-  if type.startswith("fn("): return " (fn)"
-  if type.startswith("["): return " ([])"
-  if type == "number": return " (num)"
-  if type == "string": return " (str)"
-  if type == "bool": return " (bool)"
-  return " (obj)"
+  if type is None or type == "?": return "\t? "
+  if type.startswith("fn("): return "\tfn "
+  if type.startswith("["): return "\t[] "
+  if type == "number": return "\tnum "
+  if type == "string": return "\tstr "
+  if type == "bool": return "\tbool "
+  return "\t{} "
 
-def fn_completion_icon(arguments):
-  return " (fn/"+str(len(arguments))+")"
+def fn_completion_icon(arguments, retval):
+  # return " (fn/"+str(len(arguments))+")"
+  ret = ""
+  if retval is not None:
+    ret = retval
+
+  return "(" + ", ".join(arguments) + ")" + ret + ("\tfn ")
 
 # create auto complete string from list arguments
 def create_arg_str(arguments):
@@ -421,14 +480,22 @@ def ensure_completions_cached(pfile, view):
   for rec in data["completions"]:
     rec_name = rec.get('name').replace('$', '\\$')
     rec_type = rec.get("type", None)
-    if arg_completion_enabled and completion_icon(rec_type) == " (fn)":
+    if arg_completion_enabled and rec_type is not None and rec_type.startswith("fn("):
+      retval = parse_function_type(rec).get('retval')
+
+      if retval is None or retval == "()":
+        retval = ""
+      elif retval.startswith("{"):
+        retval = "{}"
+      elif retval.startswith("["):
+        retval = "[]"
+
+      if retval != "":
+        retval = " -> " + retval
+
       arguments = get_arguments(rec_type)
       fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
-      completions.append((rec.get("name") + fn_completion_icon(arguments), fn_name))
-
-      for i in range(len(arguments) - 1, -1, -1):
-        fn_name = rec_name + "(" + create_arg_str(arguments[0:i]) + ")"
-        completions_arity.append((rec.get("name") + fn_completion_icon(arguments[0:i]), fn_name))
+      completions.append((rec.get("name") + fn_completion_icon(arguments, retval), fn_name))
     else:
       completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
 
@@ -571,12 +638,12 @@ class TernDescribe(sublime_plugin.TextCommand):
 
 class TernDisableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
-    pfile = get_pfile(view)
+    pfile = get_pfile(self.view)
     pfile.project.disabled = False
 
 class TernEnableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
-    pfile = get_pfile(view)
+    pfile = get_pfile(self.view)
     pfile.project.disabled = True
 
 # fetch a certain setting from the package settings file and if it doesn't exist check the

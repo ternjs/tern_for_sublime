@@ -6,6 +6,10 @@ This is a [Sublime Text][st] (version 2 and 3) package that provides
 [st]: http://www.sublimetext.com/
 [tern]: http://ternjs.net
 
+**NOTE**: This project is not being actively maintained right now. If
+you'd be interested in becoming a maintainer, write me or open an
+issue.
+
 In JavaScript files, the package will handle autocompletion.
 
 The following keys will be bound (in JavaScript files):
@@ -32,7 +36,7 @@ Check out the code in this repository into a subdirectory of your
 Sublime Text's `Packages` directory.
 
     cd /path/to/sublime-text-N/Packages
-    git clone git://github.com/ternjs/tern_for_sublime.git
+    git clone https://github.com/ternjs/tern_for_sublime.git
 
 Next, make sure [node.js][node] and [npm][npm] are installed (Tern is
 a JavaScript program), and install the depedencies of the package.
@@ -89,6 +93,9 @@ Tern uses `.tern-project` files to configure loading libraries and
 plugins for a project. See the [Tern docs][docs] for details.
 
 [docs]: http://ternjs.net/doc/manual.html#configuration
+
+`tern_inhibit_word_completions` (boolean, default to false)
+If true, Prevents Sublime Text from adding its word completions to the completion list after all plugins have been processed. This consists of any word in the current document that is longer than 3 characters.
 
 ### Automatically Showing Completions
 
