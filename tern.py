@@ -499,7 +499,7 @@ def ensure_completions_cached(pfile, view):
         retval = "[]"
 
       if retval != "":
-        retval = " -> " + retval
+        retval = " ➜ " + retval
 
       arguments = get_arguments(rec_type)
       fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
@@ -596,7 +596,7 @@ def parse_function_type(data):
       pos += 1
     args.append((name, type[type_start:pos]))
     if type[pos] == ",": pos += 2
-  if type[pos:pos + 5] == ") -> ":
+  if type[pos:pos + 5] == ") ➜ ":
     retval = type[pos + 5:]
   return {"name": data.get("exprName", None) or data.get("name", None) or "fn",
           "args": args,
