@@ -1,4 +1,7 @@
 # Sublime Text plugin for Tern
+# 
+# 去掉 提示 报错
+# runCommand: silent: true
 
 import sublime, sublime_plugin
 import os, sys, platform, subprocess, webbrowser, json, re, time, atexit
@@ -33,6 +36,9 @@ def on_selection_modified(view):
   if not arghints_enabled: return
   pfile = get_pfile(view)
   if pfile is not None: show_argument_hints(pfile, view)
+
+def removeQuotes(str):
+  return str.rstrip('\"\'')
 
 class Listeners(sublime_plugin.EventListener):
   def on_close(self, view):
@@ -108,8 +114,10 @@ class Listeners(sublime_plugin.EventListener):
       if not fresh:
         completions = [c for c in completions if c[1].startswith(prefix)]
 
-      completions = [postfixQuotes(c) for c in completions]
-      completions = [postfixPathes(c) for c in completions]
+      # completions = [postfixQuotes(c) for c in completions]
+      # completions = [postfixPathes(c) for c in completions]
+
+      completions = [removeQuotes(c) for c in completions]
 
     flags = 0;
     if get_setting("tern_inhibit_word_completions", False):
@@ -406,6 +414,8 @@ def send_buffer(pfile, view):
     return False
 
 def report_error(message, project):
+  # filter the timed out error message
+  # print(message)
   if message != "timed out":
     if sublime.ok_cancel_dialog(message, "Disable Tern"):
       project.disabled = True
@@ -480,8 +490,10 @@ def ensure_completions_cached(pfile, view):
       if slice.startswith(c_word) and not re.match(".*\\W", slice):
         return (c_completions, False)
 
-  data = run_command(view, {"type": "completions", "types": True, "includeKeywords": True})
+  data = run_command(view, {"type": "completions", "types": True, "includeKeywords": True}, silent=True)
   if data is None: return (None, False)
+
+  # print(data)
 
   completions = []
   completions_arity = []
@@ -499,6 +511,7 @@ def ensure_completions_cached(pfile, view):
         retval = "[]"
 
       if retval != "":
+        # retval = " -> " + retval
         retval = " ➜ " + retval
 
       arguments = get_arguments(rec_type)
@@ -514,6 +527,7 @@ def ensure_completions_cached(pfile, view):
           kind=sublime.KIND_FUNCTION
         ))
     else:
+      rec_name = removeQuotes(rec_name);
       if not is_st4:
         completions.append((rec.get("name") + "\t" + completion_icon(rec_type), rec_name))
       else:
@@ -596,8 +610,9 @@ def parse_function_type(data):
       pos += 1
     args.append((name, type[type_start:pos]))
     if type[pos] == ",": pos += 2
-  if type[pos:pos + 5] == ") ➜ ":
-    retval = type[pos + 5:]
+  if type[pos:pos + 5] == ") -> ":
+  # if type[pos:pos + 4] == ") ➜ ":
+    retval = type[pos + 4:]
   return {"name": data.get("exprName", None) or data.get("name", None) or "fn",
           "args": args,
           "retval": retval}
