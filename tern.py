@@ -154,7 +154,8 @@ def get_pfile(view):
     fname = os.path.join(os.path.dirname(__file__), get_setting("tern_default_project_dir", "default_project_dir"), str(time.time()))
   if fname in files:
     pfile = files[fname]
-    if pfile.project.disabled: return None
+    # if pfile.project.disabled: return None
+    # return pfile
     return pfile
 
   pdir = project_dir(fname)
@@ -415,7 +416,7 @@ def send_buffer(pfile, view):
 
 def report_error(message, project):
   # filter the timed out error message
-  # print(message)
+  print(message)
   if message != "timed out":
     if sublime.ok_cancel_dialog(message, "Disable Tern"):
       project.disabled = True
@@ -612,7 +613,7 @@ def parse_function_type(data):
     if type[pos] == ",": pos += 2
   if type[pos:pos + 5] == ") -> ":
   # if type[pos:pos + 4] == ") ➜ ":
-    retval = type[pos + 4:]
+    retval = type[pos + 5:]
   return {"name": data.get("exprName", None) or data.get("name", None) or "fn",
           "args": args,
           "retval": retval}
@@ -679,12 +680,15 @@ class TernDescribe(sublime_plugin.TextCommand):
 class TernDisableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     pfile = get_pfile(self.view)
-    pfile.project.disabled = False
+    print(pfile)
+    pfile.project.disabled = True
 
 class TernEnableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     pfile = get_pfile(self.view)
-    pfile.project.disabled = True
+    print(pfile)
+    pfile.project.disabled = False
+#      sublime_plugin.reload_plugin('tern_for_sublime')
 
 # fetch a certain setting from the package settings file and if it doesn't exist check the
 # Preferences.sublime-settings file for backwards compatibility.
