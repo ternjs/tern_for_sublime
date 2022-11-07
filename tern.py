@@ -1,4 +1,7 @@
 # Sublime Text plugin for Tern
+# 
+# 去掉 提示 报错
+# runCommand: silent: true
 
 import sublime, sublime_plugin
 import os, sys, platform, subprocess, webbrowser, json, re, time, atexit
@@ -12,6 +15,7 @@ except:
 windows = platform.system() == "Windows"
 python3 = sys.version_info[0] > 2
 is_st2 = int(sublime.version()) < 3000
+is_st4 = int(sublime.version()) > 4000
 
 def is_js_file(view):
   return len(view.sel()) > 0 and view.score_selector(sel_end(view.sel()[0]), "source.js") > 0
@@ -32,6 +36,9 @@ def on_selection_modified(view):
   if not arghints_enabled: return
   pfile = get_pfile(view)
   if pfile is not None: show_argument_hints(pfile, view)
+
+def removeQuotes(str):
+  return str.rstrip('\"\'')
 
 class Listeners(sublime_plugin.EventListener):
   def on_close(self, view):
@@ -103,11 +110,14 @@ class Listeners(sublime_plugin.EventListener):
     completions, fresh = ensure_completions_cached(pfile, view)
     if completions is None: return None
 
-    if not fresh:
-      completions = [c for c in completions if c[1].startswith(prefix)]
+    if not is_st4:
+      if not fresh:
+        completions = [c for c in completions if c[1].startswith(prefix)]
 
-    completions = [postfixQuotes(c) for c in completions]
-    completions = [postfixPathes(c) for c in completions]
+      # completions = [postfixQuotes(c) for c in completions]
+      # completions = [postfixPathes(c) for c in completions]
+
+      completions = [removeQuotes(c) for c in completions]
 
     flags = 0;
     if get_setting("tern_inhibit_word_completions", False):
@@ -144,7 +154,8 @@ def get_pfile(view):
     fname = os.path.join(os.path.dirname(__file__), get_setting("tern_default_project_dir", "default_project_dir"), str(time.time()))
   if fname in files:
     pfile = files[fname]
-    if pfile.project.disabled: return None
+    # if pfile.project.disabled: return None
+    # return pfile
     return pfile
 
   pdir = project_dir(fname)
@@ -404,17 +415,20 @@ def send_buffer(pfile, view):
     return False
 
 def report_error(message, project):
-  if sublime.ok_cancel_dialog(message, "Disable Tern"):
-    project.disabled = True
+  # filter the timed out error message
+  print(message)
+  if message != "timed out":
+    if sublime.ok_cancel_dialog(message, "Disable Tern"):
+      project.disabled = True
 
 def completion_icon(type):
-  if type is None or type == "?": return "\t? "
-  if type.startswith("fn("): return "\tfn "
-  if type.startswith("["): return "\t[] "
-  if type == "number": return "\tnum "
-  if type == "string": return "\tstr "
-  if type == "bool": return "\tbool "
-  return "\t{} "
+  if type is None or type == "?": return "?"
+  if type.startswith("fn("): return "fn"
+  if type.startswith("["): return "[]"
+  if type == "number": return "num"
+  if type == "string": return "str"
+  if type == "bool": return "bool"
+  return "{}"
 
 def fn_completion_icon(arguments, retval):
   # return " (fn/"+str(len(arguments))+")"
@@ -422,7 +436,12 @@ def fn_completion_icon(arguments, retval):
   if retval is not None:
     ret = retval
 
-  return "(" + ", ".join(arguments) + ")" + ret + ("\tfn ")
+  if is_st4:
+    tail = ""
+  else:
+    tail = "\tfn "
+
+  return "(" + ", ".join(arguments) + ")" + ret + tail
 
 # create auto complete string from list arguments
 def create_arg_str(arguments):
@@ -472,8 +491,10 @@ def ensure_completions_cached(pfile, view):
       if slice.startswith(c_word) and not re.match(".*\\W", slice):
         return (c_completions, False)
 
-  data = run_command(view, {"type": "completions", "types": True, "includeKeywords": True})
+  data = run_command(view, {"type": "completions", "types": True, "includeKeywords": True}, silent=True)
   if data is None: return (None, False)
+
+  # print(data)
 
   completions = []
   completions_arity = []
@@ -491,13 +512,32 @@ def ensure_completions_cached(pfile, view):
         retval = "[]"
 
       if retval != "":
-        retval = " -> " + retval
+        # retval = " -> " + retval
+        retval = " ➜ " + retval
 
       arguments = get_arguments(rec_type)
       fn_name = rec_name + "(" + create_arg_str(arguments) + ")"
-      completions.append((rec.get("name") + fn_completion_icon(arguments, retval), fn_name))
+      if not is_st4:
+        completions.append((rec.get("name") + fn_completion_icon(arguments, retval), fn_name))
+      else:
+        completions.append(sublime.CompletionItem(
+          (rec.get("name") + fn_completion_icon(arguments, retval)),
+          annotation='fn',
+          completion=fn_name,
+          completion_format=sublime.COMPLETION_FORMAT_SNIPPET,
+          kind=sublime.KIND_FUNCTION
+        ))
     else:
-      completions.append((rec.get("name") + completion_icon(rec_type), rec_name))
+      rec_name = removeQuotes(rec_name);
+      if not is_st4:
+        completions.append((rec.get("name") + "\t" + completion_icon(rec_type), rec_name))
+      else:
+        completions.append(sublime.CompletionItem(
+          rec.get("name"),
+          annotation=completion_icon(rec_type),
+          completion=rec_name,
+          kind=sublime.KIND_VARIABLE
+        ))
 
   # put the auto completions of functions with lower arity at the bottom of the autocomplete list
   # so they don't clog up the autocompeltions at the top of the list
@@ -572,6 +612,7 @@ def parse_function_type(data):
     args.append((name, type[type_start:pos]))
     if type[pos] == ",": pos += 2
   if type[pos:pos + 5] == ") -> ":
+  # if type[pos:pos + 4] == ") ➜ ":
     retval = type[pos + 5:]
   return {"name": data.get("exprName", None) or data.get("name", None) or "fn",
           "args": args,
@@ -639,12 +680,15 @@ class TernDescribe(sublime_plugin.TextCommand):
 class TernDisableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     pfile = get_pfile(self.view)
-    pfile.project.disabled = False
+    print(pfile)
+    pfile.project.disabled = True
 
 class TernEnableProject(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     pfile = get_pfile(self.view)
-    pfile.project.disabled = True
+    print(pfile)
+    pfile.project.disabled = False
+#      sublime_plugin.reload_plugin('tern_for_sublime')
 
 # fetch a certain setting from the package settings file and if it doesn't exist check the
 # Preferences.sublime-settings file for backwards compatibility.
